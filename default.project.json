@@ -10,6 +10,13 @@
       },
       "Hello": {
         "$path": "src/shared/Hello.luau"
+      },
+      "Remotes": {
+        "$className": "Folder",
+        "StartGameClient": { "$className": "RemoteEvent" },
+        "PaintTrail": { "$className": "RemoteEvent" },
+        "PowerupActivated": { "$className": "RemoteEvent" },
+        "UpdateProgress": { "$className": "RemoteEvent" }
       }
     },
 
