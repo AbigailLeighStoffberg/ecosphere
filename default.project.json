@@ -4,6 +4,7 @@
     "$className": "DataModel",
 
     "ReplicatedStorage": {
+      "$ignoreUnknownInstances": true,
       "GameConfig": {
         "$path": "src/shared/GameConfig.lua"
       },
@@ -13,16 +14,20 @@
     },
 
     "ServerScriptService": {
+      "$ignoreUnknownInstances": true,
       "$path": "src/server"
     },
 
     "StarterPlayer": {
+      "$ignoreUnknownInstances": true,
       "StarterPlayerScripts": {
+        "$ignoreUnknownInstances": true,
         "$path": "src/client"
       }
     },
 
     "Workspace": {
+      "$ignoreUnknownInstances": true,
       "$properties": {
         "FilteringEnabled": true
       },
@@ -50,6 +55,7 @@
       }
     },
     "Lighting": {
+      "$ignoreUnknownInstances": true,
       "$properties": {
         "Ambient": [
           0,
@@ -63,6 +69,7 @@
       }
     },
     "SoundService": {
+      "$ignoreUnknownInstances": true,
       "$properties": {
         "RespectFilteringEnabled": true
       }
