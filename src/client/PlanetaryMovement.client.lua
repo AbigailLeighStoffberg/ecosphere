@@ -66,7 +66,7 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
 	elseif input.KeyCode == Enum.KeyCode.Two then
 		newClass = "Cultivator"
 	elseif input.KeyCode == Enum.KeyCode.Three then
-		newClass = "Empath"
+		newClass = "Advocate"
 	end
 	
 	if newClass then
@@ -112,14 +112,14 @@ local function onCharacterAdded(character)
 
 	-- Get physics objects (will timeout for normal avatars in the lobby)
 	warn("[PM-DEBUG] Waiting for PlanetGravity...")
-	local gravityForce = rootPart:WaitForChild("PlanetGravity", 0.5)
+	local gravityForce = rootPart:WaitForChild("PlanetGravity", 5)
 	if not gravityForce then 
 		warn("[PM-DEBUG] PlanetGravity not found, resetting camera to Custom for lobby")
 		_G.ClassSelected = false
 		return 
 	end
 	
-	local rollTorque = rootPart:WaitForChild("RollTorque", 0.5)
+	local rollTorque = rootPart:WaitForChild("RollTorque", 5)
 	if not rollTorque then 
 		warn("[PM-DEBUG] RollTorque not found!")
 		return 
@@ -166,24 +166,8 @@ local function onCharacterAdded(character)
 		UIS.MouseBehavior = Enum.MouseBehavior.LockCenter
 	end
 
-	task.spawn(function()
-		while not _G.ClassSelected do
-			task.wait(0.1)
-		end
-		warn("[PM-DEBUG] Class selected, calling activateControls")
-		activateControls()
-	end)
-
-	-- Fallback: if color already changed
-	task.delay(1, function()
-		if rootPart.Color ~= Color3.fromRGB(200, 200, 200) then
-			warn("[PM-DEBUG] Fallback activated - class already selected")
-			_G.ClassSelected = true
-			activateControls()
-		end
-	end)
-
 	-- Main physics + camera loop
+	activateControls()
 	renderConn = RunService.RenderStepped:Connect(function(dt)
 		if not rootPart or not rootPart.Parent then return end
 

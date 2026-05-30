@@ -10,24 +10,35 @@ GameConfig.GRAVITY_STRENGTH = 400
 GameConfig.ROLL_SPEED = 80
 GameConfig.MAX_TORQUE = 30000
 
+-- Global UI Palette
+GameConfig.Palette = {
+	LightGreen = Color3.fromHex("#A8D9A3"),
+	SoftGold = Color3.fromHex("#F2D35B"),
+	BrightOrange = Color3.fromHex("#FF6F20"),
+	ForestGreen = Color3.fromHex("#2A7A3D"),
+	PureGold = Color3.fromHex("#FFD700"),
+	DarkTeal = Color3.fromHex("#1C3F3D"),
+	LightGrey = Color3.fromHex("#E2E3E5"),
+}
+
 -- Classes
 GameConfig.CLASSES = {
 	Economist = {
 		DisplayName = "The Economist",
 		Color = Color3.fromHex("#d4af37"),  -- Rich Metallic Gold
-		Description = "Paints pathways in Gold",
+		Description = "Lays down a glowing network for clean, zero-waste trade. Maps out fair-trade routes and ethical supply chains.",
 		Icon = "💰",
 	},
 	Cultivator = {
 		DisplayName = "The Cultivator",
 		Color = Color3.fromHex("#699254"),   -- Palette Green
-		Description = "Paints ecological zones in Green",
+		Description = "Acts as a high-speed seeder. Injects bio-gels to rapidly grow forests, restore soil, and protect the environment.",
 		Icon = "🌱",
 	},
-	Empath = {
-		DisplayName = "The Empath",
+	Advocate = {
+		DisplayName = "The Advocate",
 		Color = Color3.fromHex("#d06a49"),  -- Palette Coral/Red
-		Description = "Paints intersections in Coral",
+		Description = "Uses smart-dust to create safe zones. Maps out cultural spaces and ensures resources are shared equally for a fair community.",
 		Icon = "💜",
 	},
 }

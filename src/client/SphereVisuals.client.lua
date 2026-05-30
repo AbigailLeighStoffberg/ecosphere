@@ -148,7 +148,7 @@ local function updateCharacterVisuals(charData, dt)
 					-- Gentle seed cylinder bobbing + slow rotation
 					local bob = math.sin(tick() * 3.5) * 0.2
 					coreWeld.C0 = CFrame.new(0, bob, 0) * CFrame.Angles(charData.CoreAngle * 0.25, 0, math.rad(90))
-				elseif className == "Empath" then
+				elseif className == "Advocate" then
 					-- Pulsating magenta core size + orbit ring spin
 					local pulse = 1 + math.sin(tick() * 7.5) * 0.15
 					coreBase.Size = Vector3.new(1.5, 1.5, 1.5) * pulse
@@ -184,8 +184,8 @@ local function updateCharacterVisuals(charData, dt)
 				spawn3DLeaf(root.Position - targetCF.LookVector * 2.8 - Vector3.new(0, 1.5, 0), velocity)
 			end
 		end
-	elseif className == "Empath" then
-		local trail = root:FindFirstChild("EmpathTrail")
+	elseif className == "Advocate" then
+		local trail = root:FindFirstChild("AdvocateTrail")
 		if trail then
 			if speed > 12 then
 				trail.Enabled = true
@@ -239,7 +239,7 @@ local function setupVisuals(character, player, root, shell, shellWeld, visualMes
 			sparks.Enabled = false
 			sparks.Parent = root
 		end
-	elseif className == "Empath" then
+	elseif className == "Advocate" then
 		local att0 = root:FindFirstChild("TrailAtt0")
 		if not att0 then
 			att0 = Instance.new("Attachment")
@@ -256,10 +256,10 @@ local function setupVisuals(character, player, root, shell, shellWeld, visualMes
 			att1.Parent = root
 		end
 
-		local trail = root:FindFirstChild("EmpathTrail")
+		local trail = root:FindFirstChild("AdvocateTrail")
 		if not trail then
 			trail = Instance.new("Trail")
-			trail.Name = "EmpathTrail"
+			trail.Name = "AdvocateTrail"
 			trail.Attachment0 = att0
 			trail.Attachment1 = att1
 			trail.Color = ColorSequence.new(Color3.fromHex("#d06a49"))
@@ -307,7 +307,7 @@ local function setupVisuals(character, player, root, shell, shellWeld, visualMes
 		SquashAmount = 0,
 		SquashNormal = Vector3.new(0, 1, 0),
 		CoreAngle = math.random() * 100,
-		CoreSpinSpeed = className == "Economist" and 4.2 or (className == "Empath" and 2.5 or 1.2),
+		CoreSpinSpeed = className == "Economist" and 4.2 or (className == "Advocate" and 2.5 or 1.2),
 		LastLeafTime = 0
 	}
 end

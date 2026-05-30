@@ -97,7 +97,7 @@ progTitle.Font = Enum.Font.GothamBold
 progTitle.Parent = progressFrame
 
 -- Build individual progress bars
-local classOrder = {"Economist", "Cultivator", "Empath"}
+local classOrder = {"Economist", "Cultivator", "Advocate"}
 local barFills = {}
 local barLabels = {}
 local barPcts = {}
@@ -322,7 +322,7 @@ end
 
 createSwitchBtn("Economist", "1")
 createSwitchBtn("Cultivator", "2")
-createSwitchBtn("Empath", "3")
+createSwitchBtn("Advocate", "3")
 
 -- ============================================================
 -- EVENT HANDLING

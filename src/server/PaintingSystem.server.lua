@@ -34,7 +34,7 @@ end
 
 -- Calculate coverage percentages
 local function getCoverage()
-	local counts = { Economist = 0, Cultivator = 0, Empath = 0 }
+	local counts = { Economist = 0, Cultivator = 0, Advocate = 0 }
 	local totalCells = RES * RES
 
 	for t = 1, RES do
@@ -52,7 +52,7 @@ local function getCoverage()
 	return {
 		Economist = math.min(counts.Economist / targetCells, 1),
 		Cultivator = math.min(counts.Cultivator / targetCells, 1),
-		Empath = math.min(counts.Empath / targetCells, 1),
+		Advocate = math.min(counts.Advocate / targetCells, 1),
 	}
 end
 
@@ -131,7 +131,7 @@ Remotes.SelectClass.OnServerEvent:Connect(function(player, className)
 					weld.C1 = CFrame.new(0, 0, 0)
 					weld.Parent = coreBase
 
-				elseif className == "Empath" then
+				elseif className == "Advocate" then
 					-- Pulsating magenta Sphere + Intersecting Rings
 					local coreBase = Instance.new("Part")
 					coreBase.Name = "CoreBase"
@@ -237,7 +237,7 @@ Remotes.PaintTrail.OnServerEvent:Connect(function(player, position, normal)
 
 	-- Snap position to planet surface
 	local dirFromCenter = (position - GameConfig.PLANET_CENTER).Unit
-	local surfacePos = GameConfig.PLANET_CENTER + dirFromCenter * (GameConfig.PLANET_RADIUS + 0.15)
+	local surfacePos = GameConfig.PLANET_CENTER + dirFromCenter * (GameConfig.PLANET_RADIUS + 0.45)
 
 	-- Update coverage grid
 	local tIdx, pIdx = posToGrid(surfacePos)

@@ -6,7 +6,7 @@ local GameConfig = require(RS:WaitForChild("GameConfig"))
 local Remotes = RS:WaitForChild("Remotes")
 
 local Lobby = Workspace:WaitForChild("Lobby")
-local classOptions = {"Economist", "Cultivator", "Empath"}
+local classOptions = {"Economist", "Cultivator", "Advocate"}
 local debounce = {}
 
 local portals = {
@@ -75,22 +75,23 @@ local function teleportPlayer(player, assignedClass)
     root.Anchored = true
     newChar:PivotTo(CFrame.new(0, 515, 0))
     
-    playTeleportEffect(Vector3.new(0, 512, 0), classColor)
+    if oldChar and oldChar.PrimaryPart then
+        playTeleportEffect(oldChar:GetPivot().Position, classColor)
+    else
+        playTeleportEffect(Vector3.new(0, 512, 0), classColor)
+    end
     
     newChar.Parent = workspace
     player.Character = newChar
     
     if oldChar then oldChar:Destroy() end
     
-    task.wait(0.15)
-    if root then pcall(function() root:SetNetworkOwner(player) end) end
-    
-    task.spawn(function()
-        task.wait(0.35)
+    task.delay(0.35, function()
         if root and root.Parent then
             root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
             root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
             root.Anchored = false
+            pcall(function() root:SetNetworkOwner(player) end)
         end
     end)
     
@@ -116,14 +117,16 @@ RunService.Heartbeat:Connect(function()
         if #charList == 0 then continue end
         overlapParams.FilterDescendantsInstances = charList
         
-        local parts = Workspace:GetPartsInPart(pad, overlapParams)
+        local parts = Workspace:GetPartBoundsInBox(pad.CFrame, pad.Size + Vector3.new(2, 4, 2), overlapParams)
         local playersInZone = {}
         for _, part in ipairs(parts) do
-            local char = part.Parent
-            local player = Players:GetPlayerFromCharacter(char)
-            if player and not charsInZone[player] then
-                charsInZone[player] = true
-                table.insert(playersInZone, player)
+            local char = part:FindFirstAncestorWhichIsA("Model")
+            if char then
+                local player = Players:GetPlayerFromCharacter(char)
+                if player and not charsInZone[player] then
+                    charsInZone[player] = true
+                    table.insert(playersInZone, player)
+                end
             end
         end
         
@@ -144,7 +147,7 @@ RunService.Heartbeat:Connect(function()
                     debounce[player] = true
                     
                     local assignedClass = available[(index - 1) % #available + 1]
-                    teleportPlayer(player, assignedClass)
+                    task.spawn(teleportPlayer, player, assignedClass)
                     task.delay(5, function() debounce[player] = nil end)
                 end
             end

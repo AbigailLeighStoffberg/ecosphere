@@ -117,11 +117,20 @@ local function addCaptureZone(model)
 end
 
 local function setupBlueprints()
-    local blueprintsFolder = Workspace:FindFirstChild("Blueprints")
-    if not blueprintsFolder then return end
+    local blueprintsFolder = Workspace:WaitForChild("Blueprints")
+    if not blueprintsFolder then 
+        warn("[EcoSphere-Debug] Blueprints folder not found!")
+        return 
+    end
 
-    for _, model in ipairs(blueprintsFolder:GetChildren()) do
+    task.wait(1) -- Wait for all static objects inside the folder to finish loading
+
+    local children = blueprintsFolder:GetChildren()
+    warn("[EcoSphere-Debug] Found " .. #children .. " models in Blueprints")
+
+    for _, model in ipairs(children) do
         if model:IsA("Model") then
+            warn("[EcoSphere-Debug] Processing model: " .. model.Name)
             -- Strip original colors and make them holograms
             for _, child in ipairs(model:GetDescendants()) do
                 if child:IsA("BasePart") then
@@ -146,6 +155,7 @@ local function setupBlueprints()
                 if #parts > 0 then model.PrimaryPart = parts[1] end
             end
 
+            warn("[EcoSphere-Debug] Adding capture zone for " .. model.Name)
             addCaptureZone(model)
         end
     end
@@ -156,8 +166,8 @@ end
 local function getPlayersInZone(zone)
     local chars = {}
     for _, player in ipairs(Players:GetPlayers()) do
-        if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-            table.insert(chars, player.Character.HumanoidRootPart)
+        if player.Character then
+            table.insert(chars, player.Character)
         end
     end
     overlapParams.FilterDescendantsInstances = chars
@@ -171,17 +181,19 @@ local function getPlayersInZone(zone)
     local firstClassColor = nil
     
     for _, part in ipairs(parts) do
-        local char = part.Parent
-        local player = Players:GetPlayerFromCharacter(char)
-        if player and not table.find(playersInside, player) then
-            table.insert(playersInside, player)
-            local pClass = char:GetAttribute("Class")
-            if pClass then
-                if not uniqueClasses[pClass] then
-                    uniqueClasses[pClass] = true
-                    classCount = classCount + 1
-                    if not firstClassColor then
-                        firstClassColor = GameConfig.CLASSES[pClass].Color
+        local char = part:FindFirstAncestorWhichIsA("Model")
+        if char then
+            local player = Players:GetPlayerFromCharacter(char)
+            if player and not table.find(playersInside, player) then
+                table.insert(playersInside, player)
+                local pClass = char:GetAttribute("Class")
+                if pClass then
+                    if not uniqueClasses[pClass] then
+                        uniqueClasses[pClass] = true
+                        classCount = classCount + 1
+                        if not firstClassColor then
+                            firstClassColor = GameConfig.CLASSES[pClass].Color
+                        end
                     end
                 end
             end
