@@ -4,22 +4,21 @@
     "$className": "DataModel",
 
     "ReplicatedStorage": {
-      "Shared": {
-        "$path": "src/shared"
+      "GameConfig": {
+        "$path": "src/shared/GameConfig.lua"
+      },
+      "Hello": {
+        "$path": "src/shared/Hello.luau"
       }
     },
 
     "ServerScriptService": {
-      "Server": {
-        "$path": "src/server"
-      }
+      "$path": "src/server"
     },
 
     "StarterPlayer": {
       "StarterPlayerScripts": {
-        "Client": {
-          "$path": "src/client"
-        }
+        "$path": "src/client"
       }
     },
 
