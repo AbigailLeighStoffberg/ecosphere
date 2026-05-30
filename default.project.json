@@ -17,6 +17,19 @@
         "PaintTrail": { "$className": "RemoteEvent" },
         "PowerupActivated": { "$className": "RemoteEvent" },
         "UpdateProgress": { "$className": "RemoteEvent" }
+      },
+      "SphereCharacter": {
+        "$className": "Model",
+        "HumanoidRootPart": {
+          "$className": "Part",
+          "$properties": {
+            "Shape": "Ball",
+            "Size": [2, 2, 2],
+            "CanCollide": true,
+            "Massless": true,
+            "Transparency": 1
+          }
+        }
       }
     },
 
