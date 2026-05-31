@@ -218,6 +218,13 @@ end
 local function setupVisuals(character, player, root, shell, shellWeld, visualMesh, className)
 	ActiveCharacters[character] = nil
 
+	-- Disable any old class emitters
+	local oldSparks = root:FindFirstChild("SparksEmitter")
+	if oldSparks then oldSparks.Enabled = false end
+	
+	local oldTrail = root:FindFirstChild("AdvocateTrail")
+	if oldTrail then oldTrail.Enabled = false end
+
 	-- Create class specific emitters
 	if className == "Economist" then
 		local sparks = root:FindFirstChild("SparksEmitter")
@@ -327,22 +334,17 @@ local function onCharacterAdded(character)
 	local visualMesh = shell:WaitForChild("VisualMesh", 5)
 	if not shellWeld or not visualMesh then return end
 
-	-- Wait for class attribute from server
+		-- Wait for class attribute from server
 	local className = character:GetAttribute("Class")
-	if not className then
-		local connection
-		connection = character:GetAttributeChangedSignal("Class"):Connect(function()
-			className = character:GetAttribute("Class")
-			if className then
-				connection:Disconnect()
-				setupVisuals(character, player, root, shell, shellWeld, visualMesh, className)
-			end
-		end)
-		
-		task.delay(10, function()
-			if connection then connection:Disconnect() end
-		end)
-	else
+	
+	character:GetAttributeChangedSignal("Class"):Connect(function()
+		local newClass = character:GetAttribute("Class")
+		if newClass then
+			setupVisuals(character, player, root, shell, shellWeld, visualMesh, newClass)
+		end
+	end)
+	
+	if className then
 		setupVisuals(character, player, root, shell, shellWeld, visualMesh, className)
 	end
 end

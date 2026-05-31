@@ -57,6 +57,56 @@ local function getCoverage()
 end
 
 -- Class selection
+local function spawnGrass(className, surfacePos, paintSize, upDir, rightDir, forwardDir)
+	if className ~= "Cultivator" then return end
+	local grassAsset = RS:FindFirstChild("Grass")
+	if not grassAsset then return end
+	
+	local numGrass = math.clamp(math.floor(paintSize / 1.5), 3, 15)
+	for i = 1, numGrass do
+		local g = grassAsset:Clone()
+		
+		local r = (math.random() * (paintSize/2 * 0.8))
+		local theta = math.random() * math.pi * 2
+		local offset = rightDir * (math.cos(theta) * r) + forwardDir * (math.sin(theta) * r)
+		
+		local p = surfacePos + offset
+		
+		local gUp = (p - GameConfig.PLANET_CENTER).Unit
+		local gRight = gUp:Cross(Vector3.new(0, 1, 0))
+		if gRight.Magnitude < 0.001 then gRight = gUp:Cross(Vector3.new(1, 0, 0)) end
+		gRight = gRight.Unit
+		local gForward = gRight:Cross(gUp).Unit
+		
+		g.CFrame = CFrame.fromMatrix(p, gRight, gUp, -gForward) * CFrame.Angles(0, math.random() * math.pi * 2, 0)
+		
+		-- Shorter, wider scale for lushness instead of spikes
+		local sXZ = (math.random() * 0.8 + 1.4) * (paintSize / 12)
+		local sY = (math.random() * 0.3 + 0.6) * (paintSize / 12)
+		g.Size = Vector3.new(grassAsset.Size.X * sXZ, grassAsset.Size.Y * sY, grassAsset.Size.Z * sXZ)
+		g.Anchored = true
+		g.CanCollide = false
+		g.Parent = paintFolder
+		
+		-- Add gentle spore particles to the first grass mesh in the cluster
+		if i == 1 then
+			local pe = Instance.new("ParticleEmitter")
+			pe.Name = "SporeParticles"
+			pe.Texture = "rbxassetid://243664365"
+			pe.Color = ColorSequence.new(Color3.fromRGB(150, 255, 100))
+			pe.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.4), NumberSequenceKeypoint.new(1, 0)})
+			pe.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.2, 0.5), NumberSequenceKeypoint.new(1, 1)})
+			pe.EmissionDirection = Enum.NormalId.Top
+			pe.Lifetime = NumberRange.new(3, 5)
+			pe.Rate = 3
+			pe.Speed = NumberRange.new(1, 2)
+			pe.VelocitySpread = 30
+			pe.Drag = 1
+			pe.Parent = g
+		end
+	end
+end
+
 Remotes.SelectClass.OnServerEvent:Connect(function(player, className)
 	if GameConfig.CLASSES[className] then
 		playerClasses[player] = className
@@ -200,8 +250,9 @@ Remotes.PaintTrail.OnServerEvent:Connect(function(player, position, normal)
 	if not classData then return end
 
 	-- Check if player has powerup active
-	local paintSize = GameConfig.PAINT_SIZE_DEFAULT
-	if playerPowerups[player] and tick() < playerPowerups[player] then
+	local paintSize = classData.PaintSize or 8
+	local powerupEnd = player:GetAttribute("PowerupEndTime")
+	if powerupEnd and tick() < powerupEnd then
 		paintSize = GameConfig.PAINT_SIZE_POWERUP
 	end
 	
@@ -222,9 +273,14 @@ Remotes.PaintTrail.OnServerEvent:Connect(function(player, position, normal)
 			paintPart.Material = Enum.Material.Metal
 			paintPart.Color = classData.Color
 			paintPart.Transparency = 0
+		elseif className == "Cultivator" then
+			paintPart.Material = Enum.Material.Grass
+			paintPart.Color = classData.Color
+			paintPart.Transparency = 0
 		else
 			paintPart.Material = Enum.Material.Neon
 			paintPart.Color = classData.Color
+			paintPart.Transparency = 0.1
 		end
 		paintPart.Anchored = true
 		paintPart.CanCollide = false
@@ -232,6 +288,14 @@ Remotes.PaintTrail.OnServerEvent:Connect(function(player, position, normal)
 		paintPart.TopSurface = Enum.SurfaceType.Smooth
 		paintPart.BottomSurface = Enum.SurfaceType.Smooth
 		paintPart.Parent = paintFolder
+		
+		local up = (position - GameConfig.PLANET_CENTER).Unit
+		local right = up:Cross(Vector3.new(0, 1, 0))
+		if right.Magnitude < 0.001 then right = up:Cross(Vector3.new(1, 0, 0)) end
+		right = right.Unit
+		local forward = right:Cross(up).Unit
+		
+		spawnGrass(className, position, paintSize, up, right, forward)
 		return
 	end
 
@@ -263,6 +327,10 @@ Remotes.PaintTrail.OnServerEvent:Connect(function(player, position, normal)
 		paintPart.Material = Enum.Material.Metal
 		paintPart.Color = classData.Color
 		paintPart.Transparency = 0
+	elseif className == "Cultivator" then
+		paintPart.Material = Enum.Material.Grass
+		paintPart.Color = classData.Color
+		paintPart.Transparency = 1 -- Hide the base paint for the Cultivator
 	else
 		paintPart.Material = Enum.Material.Neon
 		paintPart.Color = classData.Color
@@ -284,11 +352,12 @@ Remotes.PaintTrail.OnServerEvent:Connect(function(player, position, normal)
 
 	paintPart.CFrame = CFrame.fromMatrix(surfacePos, up, forward)
 	paintPart.Parent = paintFolder
+	
+	spawnGrass(className, surfacePos, paintSize, up, right, forward)
 end)
 
--- Powerup activation
-Remotes.PowerupActivated.OnServerEvent:Connect(function(player)
-	playerPowerups[player] = tick() + GameConfig.POWERUP_DURATION
+Players.PlayerRemoving:Connect(function(player)
+	playerClasses[player] = nil
 end)
 
 -- Broadcast coverage updates periodically

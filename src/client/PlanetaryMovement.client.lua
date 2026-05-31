@@ -169,9 +169,10 @@ local function onCharacterAdded(character)
 	-- Main physics + camera loop
 	activateControls()
 	renderConn = RunService.RenderStepped:Connect(function(dt)
-		if not rootPart or not rootPart.Parent then return end
+		if not character.Parent or not rootPart.Parent then return end
 
-		local planetDir = (PLANET_CENTER - rootPart.Position)
+		local playerPos = rootPart.Position
+		local planetDir = (PLANET_CENTER - playerPos)
 		local distFromCenter = planetDir.Magnitude
 		local gravDir = planetDir.Unit
 
@@ -180,13 +181,11 @@ local function onCharacterAdded(character)
 		gravityForce.Force = (gravDir * mass * GRAVITY_STRENGTH) + antiGravity
 
 		local surfaceNormal = -gravDir
+		local up = surfaceNormal
 
 		if not controlActive then return end
 
 		local delta = UIS:GetMouseDelta()
-		local playerPos = rootPart.Position
-		local up = surfaceNormal
-
 		local yawCF = CFrame.fromAxisAngle(up, -delta.X * cameraSensitivity)
 		currentForward = yawCF:VectorToWorldSpace(currentForward)
 		currentForward = (currentForward - up * currentForward:Dot(up))
@@ -199,6 +198,13 @@ local function onCharacterAdded(character)
 		local camPos = playerPos - (rotatedForward * cameraDistance) + (up * cameraHeight)
 		camera.CFrame = CFrame.lookAt(camPos, playerPos + (up * 4), up)
 
+		-- Dynamic FOV based on boost
+		if player:GetAttribute("BoostActive") then
+			camera.FieldOfView = camera.FieldOfView + (90 - camera.FieldOfView) * (dt * 10)
+		else
+			camera.FieldOfView = camera.FieldOfView + (70 - camera.FieldOfView) * (dt * 10)
+		end
+
 		local inputVec = Vector3.new(0, 0, 0)
 		if keysDown[Enum.KeyCode.W] then inputVec = inputVec + rotatedForward end
 		if keysDown[Enum.KeyCode.S] then inputVec = inputVec - rotatedForward end
@@ -209,11 +215,17 @@ local function onCharacterAdded(character)
 			inputVec = inputVec.Unit
 			local torqueAxis = up:Cross(inputVec)
 			local speedMultiplier = character:GetAttribute("ArchitectSurge") and 1.5 or 1
+			if player:GetAttribute("BoostActive") then
+				speedMultiplier = speedMultiplier * 2.2
+			end
+			
 			rollTorque.AngularVelocity = torqueAxis * (ROLL_SPEED * speedMultiplier)
 			rollTorque.MaxTorque = GameConfig.MAX_TORQUE
+
 		else
+			-- Active braking: apply 0 angular velocity with moderate torque so the player can stop
 			rollTorque.AngularVelocity = Vector3.new(0, 0, 0)
-			rollTorque.MaxTorque = GameConfig.MAX_TORQUE * 0.3
+			rollTorque.MaxTorque = GameConfig.MAX_TORQUE * 0.35
 		end
 
 		if jumpInput then
@@ -228,8 +240,12 @@ local function onCharacterAdded(character)
 		if now - lastPaintTime >= GameConfig.PAINT_INTERVAL then
 			local surfaceDist = distFromCenter - GameConfig.PLANET_RADIUS
 			if surfaceDist < 8 then
-				Remotes.PaintTrail:FireServer(rootPart.Position, surfaceNormal)
-				lastPaintTime = now
+				-- Only paint if we've moved enough distance (prevents piling up at spawn)
+				if not lastPaintPos or (rootPart.Position - lastPaintPos).Magnitude > 2.5 then
+					Remotes.PaintTrail:FireServer(rootPart.Position, surfaceNormal)
+					lastPaintTime = now
+					lastPaintPos = rootPart.Position
+				end
 			end
 		end
 	end)

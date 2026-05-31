@@ -57,7 +57,7 @@ timerValue.Name = "TimerValue"
 timerValue.Size = UDim2.new(1, 0, 0, 32)
 timerValue.Position = UDim2.new(0, 0, 0, 24)
 timerValue.BackgroundTransparency = 1
-timerValue.Text = "3:00"
+timerValue.Text = "1:00"
 timerValue.TextColor3 = Color3.fromRGB(255, 255, 255)
 timerValue.TextSize = 28
 timerValue.Font = Enum.Font.GothamBold
@@ -369,7 +369,7 @@ Remotes.GameStateChanged.OnClientEvent:Connect(function(state, timeLeft)
 		end
 
 	elseif state == "playing" then
-		timerValue.Text = "3:00"
+		timerValue.Text = "1:00"
 
 	elseif state == "victory" then
 		stateOverlay.Visible = true
@@ -392,37 +392,103 @@ Remotes.GameStateChanged.OnClientEvent:Connect(function(state, timeLeft)
 end)
 
 -- Powerup indicator
+local currentPowerupId = 0
 Remotes.PowerupActivated.OnClientEvent:Connect(function(duration)
+	currentPowerupId = currentPowerupId + 1
+	local thisPowerupId = currentPowerupId
+
 	powerupFrame.Visible = true
 	powerupFrame.BackgroundTransparency = 0
-
-	-- Flash in
+	
+	-- Pop in animation
 	TweenService:Create(powerupFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back), {
-		Size = UDim2.new(0, 210, 0, 50)
+		Position = UDim2.new(1, -20, 0, 80)
 	}):Play()
-
-	task.delay(duration - 1, function()
-		-- Fade out warning
-		for i = 1, 3 do
+	
+	task.spawn(function()
+		-- Flashing effect
+		for i = 1, math.floor(duration * 2) do
+			if currentPowerupId ~= thisPowerupId then return end
 			powerupFrame.BackgroundTransparency = 0.5
-			task.wait(0.15)
+			task.wait(0.25)
+			if currentPowerupId ~= thisPowerupId then return end
 			powerupFrame.BackgroundTransparency = 0
-			task.wait(0.15)
+			task.wait(0.25)
 		end
-	end)
-
-	task.delay(duration, function()
+		
+		if currentPowerupId ~= thisPowerupId then return end
+		-- Fade out
 		TweenService:Create(powerupFrame, TweenInfo.new(0.3), {
+			Position = UDim2.new(1, -20, 0, 20),
 			BackgroundTransparency = 1
 		}):Play()
 		task.wait(0.3)
-		powerupFrame.Visible = false
-		powerupFrame.Size = UDim2.new(0, 200, 0, 45)
+		
+		if currentPowerupId == thisPowerupId then
+			powerupFrame.Visible = false
+			powerupFrame.Size = UDim2.new(0, 200, 0, 45)
+		end
 	end)
 end)
 
 Remotes:WaitForChild("StartGameClient").OnClientEvent:Connect(function()
 	screenGui.Enabled = true
+end)
+
+-- ========================
+-- BOOST HUD (bottom center)
+-- ========================
+local boostBg = Instance.new("Frame")
+boostBg.Name = "BoostBg"
+boostBg.AnchorPoint = Vector2.new(0.5, 1)
+boostBg.Position = UDim2.new(0.5, 0, 1, -25)
+boostBg.Size = UDim2.new(0, 180, 0, 8)
+boostBg.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+boostBg.BorderSizePixel = 0
+boostBg.Parent = screenGui
+
+local bgCorner = Instance.new("UICorner")
+bgCorner.CornerRadius = UDim.new(1, 0)
+bgCorner.Parent = boostBg
+
+local boostFill = Instance.new("Frame")
+boostFill.Name = "BoostFill"
+boostFill.Size = UDim2.new(1, 0, 1, 0)
+boostFill.BackgroundColor3 = Color3.fromHex("#42a5f5")
+boostFill.BorderSizePixel = 0
+boostFill.Parent = boostBg
+
+local fillCorner = Instance.new("UICorner")
+fillCorner.CornerRadius = UDim.new(1, 0)
+fillCorner.Parent = boostFill
+
+local boostText = Instance.new("TextLabel")
+boostText.Name = "BoostText"
+boostText.AnchorPoint = Vector2.new(0.5, 1)
+boostText.Position = UDim2.new(0.5, 0, 0, -4)
+boostText.Size = UDim2.new(1, 0, 0, 20)
+boostText.BackgroundTransparency = 1
+boostText.Text = "SHIFT TO BOOST"
+boostText.TextColor3 = Color3.new(1,1,1)
+boostText.Font = Enum.Font.GothamBold
+boostText.TextSize = 12
+boostText.Parent = boostBg
+
+RunService.RenderStepped:Connect(function()
+	local player = Players.LocalPlayer
+	local cd = player and player:GetAttribute("BoostCooldown") or 0
+	local now = tick()
+	if now < cd then
+		local remaining = cd - now
+		local pct = 1 - (remaining / 6) -- 6 is the total cooldown
+		boostFill.Size = UDim2.new(math.clamp(pct, 0, 1), 0, 1, 0)
+		boostFill.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+		boostText.Text = string.format("RECHARGING: %.1f", remaining)
+	else
+		boostFill.Size = UDim2.new(1, 0, 1, 0)
+		boostFill.BackgroundColor3 = Color3.fromHex("#42a5f5")
+		boostText.Text = "SHIFT TO BOOST"
+	end
 end)
 
 print("[EcoSphere] GameHUD initialized")

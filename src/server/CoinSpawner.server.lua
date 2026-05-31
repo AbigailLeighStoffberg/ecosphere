@@ -86,6 +86,7 @@ local function setupCoinTouch(coin)
 		-- Notify client for powerup
 		Remotes.CoinCollected:FireClient(player)
 		Remotes.PowerupActivated:FireClient(player, GameConfig.POWERUP_DURATION)
+		player:SetAttribute("PowerupEndTime", tick() + GameConfig.POWERUP_DURATION)
 
 		-- Respawn coin after delay
 		task.delay(GameConfig.COIN_RESPAWN_TIME, function()

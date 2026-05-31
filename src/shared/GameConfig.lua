@@ -5,10 +5,10 @@ local GameConfig = {}
 GameConfig.PLANET_CENTER = Vector3.new(0, 0, 0)
 GameConfig.PLANET_RADIUS = 512 -- half of 1024
 
--- Gravity
-GameConfig.GRAVITY_STRENGTH = 400
-GameConfig.ROLL_SPEED = 80
-GameConfig.MAX_TORQUE = 30000
+-- Gravity and Physics
+GameConfig.GRAVITY_STRENGTH = 300
+GameConfig.ROLL_SPEED = 90
+GameConfig.MAX_TORQUE = 45000
 
 -- Global UI Palette
 GameConfig.Palette = {
@@ -59,7 +59,7 @@ GameConfig.DEBRIS_COUNT = 120
 GameConfig.DEBRIS_ORBIT_HEIGHT = 20 -- above planet surface
 
 -- Game
-GameConfig.GAME_DURATION = 180 -- seconds
+GameConfig.GAME_DURATION = 60 -- seconds
 GameConfig.WIN_THRESHOLD = 0.80 -- 80%
 
 -- Coverage tracking
