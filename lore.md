@@ -1,24 +1,22 @@
-# ECOSPHERE: The Kinetic Terraforming Initiative
+# ECOSPHERE: The Digital Ancestors Initiative
 
 ## The Setting: A World Gone Quiet
-PlanetBase was not always a dead rock. Centuries ago, it thrived, but a catastrophic failure to balance progress with nature caused a total ecosystem collapse. The atmosphere thinned, the oceans dried into dust, and the planet’s core went dormant. Traditional machinery and static terraforming engines cannot survive on the surface—they freeze and fail upon contact with the lifeless, hardened crust.
+PlanetBase was not always a dead rock. Centuries ago, it thrived, but a catastrophic failure to balance progress with nature caused a total ecosystem collapse. When the atmosphere thinned and the oceans turned to dust, the greatest minds of the old world realized flesh and blood could not survive. They uploaded their consciousness to a massive, lush orbital station, entering a digital sleep while the planet below went dormant.
 
-## The Solution: The Kinetic Initiative
-Hovering in orbit is the last vestige of the planet's original designers: a lush, Solarpunk orbital station. To save the world below, a radical new technology was developed. Instead of sending machines, the station drops Kinetic Terraforming Capsules—highly advanced, spherical drones known as the "Seeds of Future Harmony."
+## The Solution: Vessels of the Past
+Traditional machinery and static terraforming engines cannot survive on the surface—they freeze and fail upon contact with the lifeless crust. The only thing that can heal the planet is human willpower. The station now drops Kinetic Terraforming Capsules—not drones, but glowing, crystalline containment vessels carrying the digitized souls of the planet's original designers. By rolling across the dead crust, these digital ancestors project their memories and intent as physical, self-assembling smart-matter.
 
-These capsules are designed to convert massive amounts of kinetic friction and momentum into pure terraforming energy. By rolling, jumping, and ricocheting across the barren crust, these drones spark the planet back to life, trailing the smart-matter foundations of a new world behind them.
+## The Three Architects (The Soul Frequencies)
+A sustainable future requires a perfect balance of three distinct mindsets. The capsules glow with the specific "soul-frequency" of the ancestor piloting it:
 
-## The Three Architects & The Smart-Trails
-A sustainable future cannot be built on nature or money alone; it requires a perfect balance of three distinct pillars. You play as one of the specialized drones responsible for weaving this future. As your capsule rolls, it deploys a specialized Smart-Matter Wake designed to instantly prep the dead crust for utopian infrastructure:
+*   **The Economist (Gold - The Economic Pillar):** The visionary of sustainable growth. As this soul rolls, it projects a transparent, zero-waste Smart-Ledger Lattice. It maps fair-trade routes and ethical supply chains so the new economy can thrive without exploiting people or the planet.
+*   **The Cultivator (Electric Green - The Environmental Pillar):** The memory of nature. This high-speed vessel uses its momentum to churn the rock and inject bio-gels. It remembers the lush past, rapidly growing resilient forests, restoring the soil, and protecting the new biosphere.
+*   **The Advocate (Coral/Magenta - The Social Pillar):** The protector of the people. This soul projects swarms of micro-surveyors and environmental shields. It creates safe, breathable zones and lays down the physical, hard-light blueprints for future community hubs and housing sectors.
 
-*   **The Economist (The Gold Trail - The Economic Pillar):** Lays down a glowing network for clean, zero-waste trade. It maps out fair-trade routes and ethical supply chains so the new economy can grow and create wealth without exploiting people or the planet.
-*   **The Cultivator (The Electric Green Trail - The Environmental Pillar):** Acts as a high-speed seeder. It churns the dead rock and injects special bio-gels to rapidly grow forests, restore the soil, and protect the new natural environment.
-*   **The Advocate (The Coral/Magenta Trail - The Social Pillar):** Uses smart-dust to create safe, breathable zones for humans. It maps out cultural spaces, ensures resources are shared equally, and guarantees a fair, safe community for everyone.
-
-## The Friction of Progress (The Mechanics)
-Isolation leads to collapse. If an Economist builds a grid without a Cultivator's soil primer, the sector ultimately fails. But when the capsules cross paths and their smart-matter trails intersect, they achieve true Solarpunk harmony. These intersections trigger explosive chemical reactions called "Harmony Blooms," instantly blossoming complex, cooperative infrastructure—like Solar-Trees and bio-domes—directly from the data in the blueprints.
+## The Friction of Progress (The Harmony Bloom)
+A lone digital soul cannot rebuild a world. If an Economist builds a grid without a Cultivator's soil, the sector collapses into grayscale dust. But when these ancient minds synchronize—when the Gold, Green, and Magenta trails intersect—they achieve The Harmony Bloom. Their combined frequencies instantly blossom complex, cooperative eco-architecture, like Solar-Trees and bio-domes, directly from the data of the old world.
 
 ## The 60-Second Window (The Architect Trials)
-This isn't the real surface of PlanetBase—not yet. You are currently inside the orbital station’s holographic projection deck. This is the final simulation trial for all newly commissioned Architects.
+What you are experiencing isn't the real surface of PlanetBase—not yet. You are currently inside the orbital station’s holographic projection deck. This is the Architect Trial, a simulation designed by the station's mainframe to test if a squad of digital souls is ready to be reborn on the real surface.
 
-The station’s mainframe has generated a flawless 1:1 holographic replica of the dead planet below. To prove your squad is ready for the actual orbital drop, the system gives you exactly 60 seconds to achieve absolute harmonic synergy. You must reach 80% coverage across all three pillars simultaneously before the simulation terminates. If the balance fails in the sim, it fails on the surface. Show the mainframe what you can design.
+Because projecting consciousness requires immense processing power, the mainframe can only sustain the neural link for exactly 60 seconds before it risks corrupting your data. You have one minute to prove you can achieve absolute harmonic synergy using pure instinct. All three pillars must reach 80% coverage simultaneously before the simulation terminates and severs the connection. If you fail in the sim, your souls remain in orbital stasis. If you succeed, the real Launch Gates open. Show the mainframe you are ready to go home.

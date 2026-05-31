@@ -46,6 +46,12 @@ local function discoverPads()
 						countdownThread = nil,
 						teleporting = false,
 					})
+
+					-- Adjust BillboardGui height offset to float above head height
+					local bgui = pad:FindFirstChild("Info")
+					if bgui and bgui:IsA("BillboardGui") then
+						bgui.StudsOffset = Vector3.new(0, 7, 0)
+					end
 				end
 			end
 		end
@@ -216,7 +222,10 @@ local function getPlayersOnPad(pad)
 	if #charList == 0 then return {} end
 	overlapParams.FilterDescendantsInstances = charList
 
-	local parts = Workspace:GetPartBoundsInBox(pad.CFrame, pad.Size + Vector3.new(2, 4, 2), overlapParams)
+	-- Since the pad is rotated (RightVector/local X is vertical, local Y and Z are horizontal):
+	-- we expand X (vertical height) by 8 studs, and Y/Z (horizontal boundaries) by 2 studs.
+	local detectorSize = Vector3.new(pad.Size.X + 8, pad.Size.Y + 2, pad.Size.Z + 2)
+	local parts = Workspace:GetPartBoundsInBox(pad.CFrame, detectorSize, overlapParams)
 	local playersInZone = {}
 	local seen = {}
 	for _, part in ipairs(parts) do
@@ -253,9 +262,24 @@ RunService.Heartbeat:Connect(function()
 
 		if txt then
 			if padData.countdown > 0 then
-				txt.Text = padData.model.Name .. "\n⏱ " .. math.ceil(padData.countdown)
+				txt.Text = "⏱ " .. math.ceil(padData.countdown)
 			else
-				txt.Text = padData.model.Name .. "\n(" .. count .. "/" .. req .. ")"
+				txt.Text = "(" .. count .. "/" .. req .. ")"
+			end
+		end
+
+		-- Update dynamic icon lighting based on players on the pad
+		local iconsFrame = bgui and bgui:FindFirstChild("IconsFrame")
+		if iconsFrame then
+			for i = 1, req do
+				local icon = iconsFrame:FindFirstChild("PersonIcon_" .. i)
+				if icon and icon:IsA("ImageLabel") then
+					if i <= count then
+						icon.ImageTransparency = 0 -- fully lit when occupied
+					else
+						icon.ImageTransparency = 0.75 -- dimmed/semi-transparent when empty
+					end
+				end
 			end
 		end
 
