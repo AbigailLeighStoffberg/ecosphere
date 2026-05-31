@@ -16,7 +16,12 @@
         "StartGameClient": { "$className": "RemoteEvent" },
         "PaintTrail": { "$className": "RemoteEvent" },
         "PowerupActivated": { "$className": "RemoteEvent" },
-        "UpdateProgress": { "$className": "RemoteEvent" }
+        "UpdateProgress": { "$className": "RemoteEvent" },
+        "SelectClass": { "$className": "RemoteEvent" },
+        "GameStateChanged": { "$className": "RemoteEvent" },
+        "CoinCollected": { "$className": "RemoteEvent" },
+        "QueueUpdate": { "$className": "RemoteEvent" },
+        "ReturnToLobby": { "$className": "RemoteEvent" }
       },
       "SphereCharacter": {
         "$className": "Model",

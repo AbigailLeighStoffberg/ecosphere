@@ -1,4 +1,5 @@
 -- MusicManager: Handles smooth transition of background music between Lobby and In-Game
+-- Uses game state events instead of distance-based checking
 local Players = game:GetService("Players")
 local RS = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
@@ -82,28 +83,14 @@ local function playTrack(trackName)
 	end
 end
 
--- Lobby center to check distance
-local LOBBY_CENTER = Vector3.new(1427.67, -205.44, 634.32)
-local LOBBY_RADIUS = 500
+-- Default: start with lobby music
+-- On match servers, StartGameClient will switch to game music
+playTrack("orbital")
 
--- Check player location
-local function updateMusicBasedOnLocation()
-	local char = player.Character
-	if char and char.PrimaryPart then
-		local pos = char:GetPivot().Position
-		local dist = (pos - LOBBY_CENTER).Magnitude
-		if dist <= LOBBY_RADIUS then
-			playTrack("orbital")
-		else
-			-- If in game, play Titanium unless game has ended
-			-- We will default to "titanium" if far from lobby.
-			playTrack("titanium")
-		end
-	else
-		-- Default to lobby track if no character
-		playTrack("orbital")
-	end
-end
+-- Listen to StartGameClient (fires when player enters match)
+Remotes:WaitForChild("StartGameClient").OnClientEvent:Connect(function()
+	playTrack("titanium")
+end)
 
 -- Listen to Game State changes
 Remotes.GameStateChanged.OnClientEvent:Connect(function(state, timeLeft)
@@ -114,12 +101,9 @@ Remotes.GameStateChanged.OnClientEvent:Connect(function(state, timeLeft)
 	end
 end)
 
--- Periodically check location to handle respawns/teleportation fallback
-task.spawn(function()
-	while true do
-		task.wait(1)
-		updateMusicBasedOnLocation()
-	end
+-- Listen to ReturnToLobby
+Remotes:WaitForChild("ReturnToLobby").OnClientEvent:Connect(function()
+	playTrack("orbital")
 end)
 
 print("[EcoSphere] MusicManager initialized")

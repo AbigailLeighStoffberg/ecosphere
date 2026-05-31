@@ -1,7 +1,14 @@
 -- DebrisSpawner: Creates orbital debris around the planet
+-- Only runs on match servers
 local Workspace = game:GetService("Workspace")
 local RS = game:GetService("ReplicatedStorage")
 local GameConfig = require(RS:WaitForChild("GameConfig"))
+
+-- Skip on lobby servers
+if game.PrivateServerId == "" or game.PrivateServerOwnerId ~= 0 then
+	print("[EcoSphere] DebrisSpawner: Skipping — lobby server")
+	return
+end
 
 local debrisFolder = Workspace:WaitForChild("OrbitalDebris")
 local planet = Workspace:WaitForChild("PlanetBase")

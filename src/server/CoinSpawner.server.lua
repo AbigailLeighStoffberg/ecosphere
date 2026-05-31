@@ -1,9 +1,16 @@
 -- CoinSpawner: Spawns glowing coins around the planet and handles collection
+-- Only runs on match servers
 local Workspace = game:GetService("Workspace")
 local RS = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local GameConfig = require(RS:WaitForChild("GameConfig"))
 local Remotes = RS:WaitForChild("Remotes")
+
+-- Skip on lobby servers
+if game.PrivateServerId == "" or game.PrivateServerOwnerId ~= 0 then
+	print("[EcoSphere] CoinSpawner: Skipping — lobby server")
+	return
+end
 
 local coinsFolder = Workspace:WaitForChild("Coins")
 local planet = Workspace:WaitForChild("PlanetBase")

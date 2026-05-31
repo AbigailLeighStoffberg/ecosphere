@@ -27,7 +27,7 @@ timerFrame.Name = "TimerFrame"
 timerFrame.AnchorPoint = Vector2.new(0.5, 0)
 timerFrame.Position = UDim2.new(0.5, 0, 0, 20)
 timerFrame.Size = UDim2.new(0, 180, 0, 60)
-timerFrame.BackgroundColor3 = Color3.fromHex("#5c4e4e")
+timerFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
 timerFrame.BackgroundTransparency = 0.1
 timerFrame.BorderSizePixel = 0
 timerFrame.Parent = screenGui
@@ -37,7 +37,7 @@ timerCorner.CornerRadius = UDim.new(0, 16)
 timerCorner.Parent = timerFrame
 
 local timerStroke = Instance.new("UIStroke")
-timerStroke.Color = Color3.fromHex("#596674")
+timerStroke.Color = GameConfig.Palette.PaleTeal
 timerStroke.Thickness = 2
 timerStroke.Parent = timerFrame
 
@@ -47,9 +47,9 @@ timerLabel.Size = UDim2.new(1, 0, 0, 18)
 timerLabel.Position = UDim2.new(0, 0, 0, 6)
 timerLabel.BackgroundTransparency = 1
 timerLabel.Text = "TIME REMAINING"
-timerLabel.TextColor3 = Color3.fromHex("#b9a3a0")
+timerLabel.TextColor3 = GameConfig.Palette.Cream
 timerLabel.TextSize = 11
-timerLabel.Font = Enum.Font.GothamBold
+timerLabel.Font = Enum.Font.Nunito
 timerLabel.Parent = timerFrame
 
 local timerValue = Instance.new("TextLabel")
@@ -60,7 +60,7 @@ timerValue.BackgroundTransparency = 1
 timerValue.Text = "1:00"
 timerValue.TextColor3 = Color3.fromRGB(255, 255, 255)
 timerValue.TextSize = 28
-timerValue.Font = Enum.Font.GothamBold
+timerValue.Font = Enum.Font.Nunito
 timerValue.Parent = timerFrame
 
 -- ========================
@@ -71,7 +71,7 @@ progressFrame.Name = "ProgressFrame"
 progressFrame.AnchorPoint = Vector2.new(0.5, 1)
 progressFrame.Position = UDim2.new(0.5, 0, 1, -25)
 progressFrame.Size = UDim2.new(0, 600, 0, 130)
-progressFrame.BackgroundColor3 = Color3.fromHex("#5c4e4e")
+progressFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
 progressFrame.BackgroundTransparency = 0.1
 progressFrame.BorderSizePixel = 0
 progressFrame.Parent = screenGui
@@ -81,7 +81,7 @@ progCorner.CornerRadius = UDim.new(0, 18)
 progCorner.Parent = progressFrame
 
 local progStroke = Instance.new("UIStroke")
-progStroke.Color = Color3.fromHex("#596674")
+progStroke.Color = GameConfig.Palette.PaleTeal
 progStroke.Thickness = 2
 progStroke.Parent = progressFrame
 
@@ -91,9 +91,9 @@ progTitle.Size = UDim2.new(1, 0, 0, 25)
 progTitle.Position = UDim2.new(0, 0, 0, 8)
 progTitle.BackgroundTransparency = 1
 progTitle.Text = "ECOSPHERE HARMONY"
-progTitle.TextColor3 = Color3.fromHex("#b9a3a0")
+progTitle.TextColor3 = GameConfig.Palette.Cream
 progTitle.TextSize = 13
-progTitle.Font = Enum.Font.GothamBold
+progTitle.Font = Enum.Font.Nunito
 progTitle.Parent = progressFrame
 
 -- Build individual progress bars
@@ -115,17 +115,18 @@ for i, className in ipairs(classOrder) do
 	label.Text = classData.DisplayName
 	label.TextColor3 = classData.Color
 	label.TextSize = 13
-	label.Font = Enum.Font.GothamBold
+	label.Font = Enum.Font.Nunito
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.Parent = progressFrame
 	barLabels[className] = label
 
-	-- Bar background
+	-- Bar background (translucent teal glassmorphism track)
 	local barBg = Instance.new("Frame")
 	barBg.Name = className .. "BarBg"
 	barBg.Size = UDim2.new(0, 370, 0, 20)
 	barBg.Position = UDim2.new(0, 140, 0, yOffset + 2)
-	barBg.BackgroundColor3 = Color3.fromHex("#6e5747")
+	barBg.BackgroundColor3 = GameConfig.Palette.PaleTeal
+	barBg.BackgroundTransparency = 0.8
 	barBg.BorderSizePixel = 0
 	barBg.Parent = progressFrame
 
@@ -164,7 +165,7 @@ for i, className in ipairs(classOrder) do
 	pctLabel.Text = "0%"
 	pctLabel.TextColor3 = classData.Color
 	pctLabel.TextSize = 14
-	pctLabel.Font = Enum.Font.GothamBold
+	pctLabel.Font = Enum.Font.Nunito
 	pctLabel.TextXAlignment = Enum.TextXAlignment.Right
 	pctLabel.Parent = progressFrame
 
@@ -196,7 +197,7 @@ puLabel.BackgroundTransparency = 1
 puLabel.Text = "⚡ WIDE PAINT ACTIVE"
 puLabel.TextColor3 = Color3.fromRGB(20, 20, 30)
 puLabel.TextSize = 16
-puLabel.Font = Enum.Font.GothamBold
+puLabel.Font = Enum.Font.Nunito
 puLabel.Parent = powerupFrame
 
 -- ========================
@@ -220,7 +221,7 @@ stateText.Size = UDim2.new(0, 600, 0, 100)
 stateText.BackgroundTransparency = 1
 stateText.TextColor3 = Color3.fromRGB(255, 255, 255)
 stateText.TextSize = 52
-stateText.Font = Enum.Font.GothamBold
+stateText.Font = Enum.Font.Nunito
 stateText.TextWrapped = true
 stateText.ZIndex = 11
 stateText.Parent = stateOverlay
@@ -231,9 +232,9 @@ stateSubtext.AnchorPoint = Vector2.new(0.5, 0)
 stateSubtext.Position = UDim2.new(0.5, 0, 0.55, 0)
 stateSubtext.Size = UDim2.new(0, 500, 0, 40)
 stateSubtext.BackgroundTransparency = 1
-stateSubtext.TextColor3 = Color3.fromRGB(180, 185, 200)
+stateSubtext.TextColor3 = GameConfig.Palette.Cream
 stateSubtext.TextSize = 20
-stateSubtext.Font = Enum.Font.Gotham
+stateSubtext.Font = Enum.Font.Nunito
 stateSubtext.ZIndex = 11
 stateSubtext.Parent = stateOverlay
 
@@ -245,7 +246,7 @@ switchFrame.Name = "SwitchFrame"
 switchFrame.AnchorPoint = Vector2.new(0, 1)
 switchFrame.Position = UDim2.new(0, 20, 1, -20)
 switchFrame.Size = UDim2.new(0, 220, 0, 85)
-switchFrame.BackgroundColor3 = Color3.fromHex("#5c4e4e")
+switchFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
 switchFrame.BackgroundTransparency = 0.1
 switchFrame.BorderSizePixel = 0
 switchFrame.Parent = screenGui
@@ -255,7 +256,7 @@ switchCorner.CornerRadius = UDim.new(0, 16)
 switchCorner.Parent = switchFrame
 
 local switchStroke = Instance.new("UIStroke")
-switchStroke.Color = Color3.fromHex("#596674")
+switchStroke.Color = GameConfig.Palette.PaleTeal
 switchStroke.Thickness = 2
 switchStroke.Parent = switchFrame
 
@@ -264,9 +265,9 @@ switchTitle.Size = UDim2.new(1, 0, 0, 20)
 switchTitle.Position = UDim2.new(0, 0, 0, 8)
 switchTitle.BackgroundTransparency = 1
 switchTitle.Text = "SWITCH CLASS"
-switchTitle.TextColor3 = Color3.fromHex("#b9a3a0")
+switchTitle.TextColor3 = GameConfig.Palette.Cream
 switchTitle.TextSize = 12
-switchTitle.Font = Enum.Font.GothamBold
+switchTitle.Font = Enum.Font.Nunito
 switchTitle.Parent = switchFrame
 
 local switchContainer = Instance.new("Frame")
@@ -289,7 +290,7 @@ local function createSwitchBtn(className, hotkey)
 	btn.BackgroundColor3 = classData.Color
 	btn.Text = classData.Icon
 	btn.TextSize = 20
-	btn.Font = Enum.Font.GothamBold
+	btn.Font = Enum.Font.Nunito
 	btn.Parent = switchContainer
 	
 	local btnCorner = Instance.new("UICorner")
@@ -301,9 +302,9 @@ local function createSwitchBtn(className, hotkey)
 	label.Position = UDim2.new(0, 0, 1, 2)
 	label.BackgroundTransparency = 1
 	label.Text = "[" .. hotkey .. "]"
-	label.TextColor3 = Color3.fromHex("#b9a3a0")
+	label.TextColor3 = GameConfig.Palette.Cream
 	label.TextSize = 12
-	label.Font = Enum.Font.GothamBold
+	label.Font = Enum.Font.Nunito
 	label.Parent = btn
 	
 	btn.MouseButton1Click:Connect(function()
@@ -340,9 +341,9 @@ Remotes.UpdateProgress.OnClientEvent:Connect(function(coverage)
 
 			barPcts[className].Text = math.floor(pct * 100) .. "%"
 
-			-- Color flash when crossing 80%
+			-- Color flash when crossing 80% (using LimeGreen from brand)
 			if pct >= 0.8 then
-				barPcts[className].TextColor3 = Color3.fromHex("#bdbc69")
+				barPcts[className].TextColor3 = GameConfig.Palette.LimeGreen
 			end
 		end
 	end
@@ -355,15 +356,15 @@ Remotes.GameStateChanged.OnClientEvent:Connect(function(state, timeLeft)
 		local secs = math.floor(timeLeft % 60)
 		timerValue.Text = string.format("%d:%02d", mins, secs)
 
-		-- Urgency color
+		-- Urgency color (using brand colors)
 		if timeLeft <= 30 then
-			timerValue.TextColor3 = Color3.fromHex("#c66e6e")
+			timerValue.TextColor3 = GameConfig.Palette.CoralPink
 			-- Pulse effect
 			TweenService:Create(timerValue, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, true), {
 				TextSize = 34
 			}):Play()
 		elseif timeLeft <= 60 then
-			timerValue.TextColor3 = Color3.fromHex("#e1c074")
+			timerValue.TextColor3 = GameConfig.Palette.SoftGold
 		else
 			timerValue.TextColor3 = Color3.fromRGB(255, 255, 255)
 		end
@@ -375,7 +376,7 @@ Remotes.GameStateChanged.OnClientEvent:Connect(function(state, timeLeft)
 		stateOverlay.Visible = true
 		TweenService:Create(stateOverlay, TweenInfo.new(0.8), {BackgroundTransparency = 0.3}):Play()
 		stateText.Text = "✨ HARMONY ACHIEVED! ✨"
-		stateText.TextColor3 = Color3.fromRGB(100, 255, 180)
+		stateText.TextColor3 = GameConfig.Palette.LimeGreen
 		if timeLeft and timeLeft > 0 then
 			stateSubtext.Text = "With " .. math.floor(timeLeft) .. " seconds to spare!"
 		else
@@ -386,7 +387,7 @@ Remotes.GameStateChanged.OnClientEvent:Connect(function(state, timeLeft)
 		stateOverlay.Visible = true
 		TweenService:Create(stateOverlay, TweenInfo.new(1.5), {BackgroundTransparency = 0.4}):Play()
 		stateText.Text = "ECOSYSTEM COLLAPSED"
-		stateText.TextColor3 = Color3.fromRGB(180, 80, 80)
+		stateText.TextColor3 = GameConfig.Palette.CoralPink
 		stateSubtext.Text = "The balance was not maintained..."
 	end
 end)
@@ -443,7 +444,8 @@ boostBg.Name = "BoostBg"
 boostBg.AnchorPoint = Vector2.new(0.5, 1)
 boostBg.Position = UDim2.new(0.5, 0, 1, -25)
 boostBg.Size = UDim2.new(0, 180, 0, 8)
-boostBg.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+boostBg.BackgroundColor3 = GameConfig.Palette.DarkTeal
+boostBg.BackgroundTransparency = 0.5
 boostBg.BorderSizePixel = 0
 boostBg.Parent = screenGui
 
@@ -454,7 +456,7 @@ bgCorner.Parent = boostBg
 local boostFill = Instance.new("Frame")
 boostFill.Name = "BoostFill"
 boostFill.Size = UDim2.new(1, 0, 1, 0)
-boostFill.BackgroundColor3 = Color3.fromHex("#42a5f5")
+boostFill.BackgroundColor3 = GameConfig.Palette.SoftBlue
 boostFill.BorderSizePixel = 0
 boostFill.Parent = boostBg
 
@@ -470,7 +472,7 @@ boostText.Size = UDim2.new(1, 0, 0, 20)
 boostText.BackgroundTransparency = 1
 boostText.Text = "SHIFT TO BOOST"
 boostText.TextColor3 = Color3.new(1,1,1)
-boostText.Font = Enum.Font.GothamBold
+boostText.Font = Enum.Font.Nunito
 boostText.TextSize = 12
 boostText.Parent = boostBg
 
@@ -486,9 +488,41 @@ RunService.RenderStepped:Connect(function()
 		boostText.Text = string.format("RECHARGING: %.1f", remaining)
 	else
 		boostFill.Size = UDim2.new(1, 0, 1, 0)
-		boostFill.BackgroundColor3 = Color3.fromHex("#42a5f5")
+		boostFill.BackgroundColor3 = GameConfig.Palette.SoftBlue
 		boostText.Text = "SHIFT TO BOOST"
 	end
+end)
+
+-- ========================
+-- RETURN TO LOBBY (after match ends)
+-- ========================
+local returnLabel = Instance.new("TextLabel")
+returnLabel.Name = "ReturnLabel"
+returnLabel.AnchorPoint = Vector2.new(0.5, 0)
+returnLabel.Position = UDim2.new(0.5, 0, 0.65, 0)
+returnLabel.Size = UDim2.new(0, 400, 0, 30)
+returnLabel.BackgroundTransparency = 1
+returnLabel.TextColor3 = GameConfig.Palette.Cream
+returnLabel.TextSize = 16
+returnLabel.Font = Enum.Font.Nunito
+returnLabel.Text = ""
+returnLabel.Visible = false
+returnLabel.ZIndex = 12
+returnLabel.Parent = stateOverlay
+
+Remotes:WaitForChild("ReturnToLobby").OnClientEvent:Connect(function(delay)
+	if not delay then delay = 10 end
+	returnLabel.Visible = true
+
+	task.spawn(function()
+		local remaining = delay
+		while remaining > 0 do
+			returnLabel.Text = "Returning to Lobby in " .. math.ceil(remaining) .. "..."
+			task.wait(0.5)
+			remaining = remaining - 0.5
+		end
+		returnLabel.Text = "Teleporting..."
+	end)
 end)
 
 print("[EcoSphere] GameHUD initialized")

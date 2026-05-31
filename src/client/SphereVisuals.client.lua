@@ -13,7 +13,7 @@ local function spawn3DLeaf(position, velocity)
 	local leaf = Instance.new("Part")
 	leaf.Name = "VisualLeaf"
 	leaf.Size = Vector3.new(0.7, 0.15, 1.2)
-	leaf.Color = Color3.fromHex("#699254") -- Cultivator Green
+	leaf.Color = GameConfig.CLASSES.Cultivator.Color
 	leaf.Material = Enum.Material.SmoothPlastic
 	leaf.CanCollide = false
 	leaf.Massless = true
@@ -269,7 +269,7 @@ local function setupVisuals(character, player, root, shell, shellWeld, visualMes
 			trail.Name = "AdvocateTrail"
 			trail.Attachment0 = att0
 			trail.Attachment1 = att1
-			trail.Color = ColorSequence.new(Color3.fromHex("#d06a49"))
+			trail.Color = ColorSequence.new(GameConfig.CLASSES.Advocate.Color)
 			trail.LightEmission = 1.0
 			trail.Lifetime = 0.55
 			trail.Transparency = NumberSequence.new({

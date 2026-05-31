@@ -29,7 +29,7 @@ local function showClassPopup(className)
 	title.Size = UDim2.new(1, 0, 0, 100)
 	title.Position = UDim2.new(0, 0, 0.4, 0)
 	title.BackgroundTransparency = 1
-	title.Font = Enum.Font.FredokaOne
+	title.Font = Enum.Font.Nunito
 	title.Text = "YOU ARE: " .. string.upper(className)
 	title.TextColor3 = classData.Color
 	title.TextScaled = true
@@ -114,8 +114,8 @@ local function onCharacterAdded(character)
 	warn("[PM-DEBUG] Waiting for PlanetGravity...")
 	local gravityForce = rootPart:WaitForChild("PlanetGravity", 5)
 	if not gravityForce then 
-		warn("[PM-DEBUG] PlanetGravity not found, resetting camera to Custom for lobby")
-		_G.ClassSelected = false
+		warn("[PM-DEBUG] PlanetGravity not found, this character is not a sphere")
+		-- Don't reset ClassSelected here — on match servers the sphere swap hasn't happened yet
 		return 
 	end
 	

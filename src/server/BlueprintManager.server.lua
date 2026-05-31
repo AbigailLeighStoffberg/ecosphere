@@ -1,10 +1,17 @@
 -- BlueprintManager: Handles Holographic Capture & Build mechanic
+-- Only runs on match servers
 local Workspace = game:GetService("Workspace")
 local RS = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local GameConfig = require(RS:WaitForChild("GameConfig"))
+
+-- Skip on lobby servers
+if game.PrivateServerId == "" or game.PrivateServerOwnerId ~= 0 then
+	print("[EcoSphere] BlueprintManager: Skipping — lobby server")
+	return
+end
 
 -- OverlapParams for checking players in CaptureZone
 local overlapParams = OverlapParams.new()

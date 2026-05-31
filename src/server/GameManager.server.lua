@@ -1,10 +1,23 @@
 -- GameManager: Master timer, win/fail logic, game state coordination
+-- Works on both lobby (inactive) and match servers (active)
 local Workspace = game:GetService("Workspace")
 local RS = game:GetService("ReplicatedStorage")
 local SSS = game:GetService("ServerScriptService")
 local Players = game:GetService("Players")
 local GameConfig = require(RS:WaitForChild("GameConfig"))
 local Remotes = RS:WaitForChild("Remotes")
+
+-- Determine if this is a match server
+local isMatchServer = (game.PrivateServerId ~= "" and game.PrivateServerOwnerId == 0)
+
+if not isMatchServer then
+	print("[EcoSphere] GameManager: Lobby mode — waiting for match server context")
+	-- On lobby servers, the game manager just sits idle
+	-- The old flow of starting a game in the same server is replaced by TeleportService
+	return
+end
+
+print("[EcoSphere] GameManager: Running on match server")
 
 local paintSystem = SSS:WaitForChild("PaintingSystem")
 local getCoverage = paintSystem:WaitForChild("GetCoverage")
@@ -14,23 +27,66 @@ local gameState = "waiting" -- waiting, playing, victory, defeat
 local timeRemaining = GameConfig.GAME_DURATION
 local gameStartTime = 0
 
--- Wait for at least one player to select a class before starting
-local classSelected = false
-Remotes.SelectClass.OnServerEvent:Connect(function(player, className)
-	if not classSelected and gameState == "waiting" then
-		classSelected = true
-		-- Start the game after a brief delay
-		task.delay(3, function()
-			if gameState == "waiting" then
-				gameState = "playing"
-				gameStartTime = tick()
-				timeRemaining = GameConfig.GAME_DURATION
-				Remotes.GameStateChanged:FireAllClients("playing", timeRemaining)
-				print("[EcoSphere] Game started! Timer:", GameConfig.GAME_DURATION, "seconds")
+-- On match servers, start the game automatically once a player arrives and is set up
+local function startGame()
+	if gameState ~= "waiting" then return end
+	
+	gameState = "playing"
+	gameStartTime = tick()
+	timeRemaining = GameConfig.GAME_DURATION
+	Remotes.GameStateChanged:FireAllClients("playing", timeRemaining)
+	print("[EcoSphere] Match started! Timer:", GameConfig.GAME_DURATION, "seconds")
+end
+
+-- Auto-start: wait for the first player to have a sphere character (set up by MatchBootstrap)
+task.spawn(function()
+	-- Wait for at least one player to arrive and get their sphere character
+	local waited = 0
+	while waited < GameConfig.MATCH_LOAD_TIMEOUT do
+		task.wait(0.5)
+		waited = waited + 0.5
+		
+		for _, player in ipairs(Players:GetPlayers()) do
+			local char = player.Character
+			if char and char:FindFirstChild("PlanetGravity", true) then
+				-- Player has been set up as a sphere — start the game after a brief delay
+				print("[EcoSphere] GameManager: First sphere player detected, starting match in 3s...")
+				task.wait(3)
+				startGame()
+				return
 			end
-		end)
+		end
 	end
+	
+	warn("[EcoSphere] GameManager: Timed out waiting for players, no match started")
 end)
+
+-- Also support the old SelectClass event as a fallback game start trigger
+local selectClassRemote = Remotes:FindFirstChild("SelectClass")
+if selectClassRemote then
+	selectClassRemote.OnServerEvent:Connect(function(player, className)
+		if gameState == "waiting" then
+			-- Give a brief delay then start
+			task.delay(2, function()
+				startGame()
+			end)
+		end
+	end)
+end
+
+-- End of match: return to lobby
+local function endMatch(result)
+	-- Try to call MatchBootstrap's returnToLobby
+	local matchBootstrap = SSS:FindFirstChild("MatchBootstrap")
+	if matchBootstrap then
+		local returnEvent = matchBootstrap:FindFirstChild("ReturnToLobby")
+		if returnEvent then
+			task.spawn(function()
+				returnEvent:Fire()
+			end)
+		end
+	end
+end
 
 -- Game loop
 task.spawn(function()
@@ -94,6 +150,9 @@ task.spawn(function()
 					chord.Volume = 0.8
 					chord.Playing = true
 					chord.Parent = Workspace
+
+					-- Return to lobby
+					endMatch("victory")
 				else
 					-- DEFEAT
 					gameState = "defeat"
@@ -110,6 +169,9 @@ task.spawn(function()
 					failSound.Volume = 0.6
 					failSound.Playing = true
 					failSound.Parent = Workspace
+
+					-- Return to lobby
+					endMatch("defeat")
 				end
 
 			else
@@ -160,6 +222,9 @@ task.spawn(function()
 					chord.Volume = 0.8
 					chord.Playing = true
 					chord.Parent = Workspace
+
+					-- Return to lobby
+					endMatch("victory")
 				end
 
 				-- Broadcast timer
@@ -169,4 +234,4 @@ task.spawn(function()
 	end
 end)
 
-print("[EcoSphere] GameManager initialized")
+print("[EcoSphere] GameManager initialized (match server mode)")
