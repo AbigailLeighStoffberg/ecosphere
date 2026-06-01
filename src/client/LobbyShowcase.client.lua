@@ -337,13 +337,21 @@ for _, data in ipairs(classShowcases) do
 	-- "Test Drive" Button
 	local btn = Instance.new("TextButton")
 	btn.Name = "TestDriveBtn"
-	btn.Size = UDim2.new(0.8, 0, 0, 28)
-	btn.Position = UDim2.new(0.1, 0, 0.72, 0)
 	btn.BackgroundColor3 = data.Color
 	btn.Text = "⚡ TEST DRIVE TRAIL"
 	btn.TextColor3 = GameConfig.Palette.DarkTeal
-	btn.TextSize = 11
 	btn.Font = Enum.Font.Nunito
+	
+	local UIS = game:GetService("UserInputService")
+	if UIS.TouchEnabled then
+		btn.Size = UDim2.new(0.85, 0, 0, 36)
+		btn.Position = UDim2.new(0.075, 0, 0.68, 0)
+		btn.TextSize = 12
+	else
+		btn.Size = UDim2.new(0.8, 0, 0, 28)
+		btn.Position = UDim2.new(0.1, 0, 0.72, 0)
+		btn.TextSize = 11
+	end
 	btn.Parent = frame
 
 	local btnCorner = Instance.new("UICorner")

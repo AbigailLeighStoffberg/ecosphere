@@ -1,0 +1,4208 @@
+<roblox version="4">
+  <Item class="Lighting" referent="0">
+    <Properties>
+      <string name="Name">Lighting</string>
+      <Color3 name="Ambient">
+        <R>0</R>
+        <G>0</G>
+        <B>0</B>
+      </Color3>
+      <float name="Brightness">2</float>
+      <bool name="GlobalShadows">true</bool>
+      <bool name="Outlines">false</bool>
+      <token name="Technology">1</token>
+    </Properties>
+  </Item>
+  <Item class="ReplicatedStorage" referent="1">
+    <Properties>
+      <string name="Name">ReplicatedStorage</string>
+    </Properties>
+    <Item class="ModuleScript" referent="2">
+      <Properties>
+        <string name="Name">GameConfig</string>
+        <string name="Source"><![CDATA[-- GameConfig: Shared constants for EcoSphere
+local GameConfig = {}
+
+-- Planet
+GameConfig.PLANET_CENTER = Vector3.new(0, 0, 0)
+GameConfig.PLANET_RADIUS = 512 -- half of 1024
+
+-- Gravity and Physics
+GameConfig.GRAVITY_STRENGTH = 300
+GameConfig.ROLL_SPEED = 90
+GameConfig.MAX_TORQUE = 45000
+
+-- Global UI Palette
+GameConfig.Palette = {
+	-- The 10-color brand palette
+	LimeGreen = Color3.fromHex("#7ED957"),
+	SoftGold = Color3.fromHex("#F6D55C"),
+	SoftBlue = Color3.fromHex("#3F88C5"),
+	PaleTeal = Color3.fromHex("#A7D3D0"),
+	MintGreen = Color3.fromHex("#CEEDB4"),
+	AmberGold = Color3.fromHex("#E7B10A"),
+	CoralPink = Color3.fromHex("#F6757D"),
+	Cream = Color3.fromHex("#F3EAB1"),
+	SageGreen = Color3.fromHex("#4B9C72"),
+	PastelPink = Color3.fromHex("#F9AFAE"),
+
+	-- Compatibility mappings
+	LightGreen = Color3.fromHex("#7ED957"),
+	SoftGold_Compat = Color3.fromHex("#F6D55C"), -- avoiding key duplication
+	BrightOrange = Color3.fromHex("#F6757D"),
+	ForestGreen = Color3.fromHex("#4B9C72"),
+	PureGold = Color3.fromHex("#E7B10A"),
+	DarkTeal = Color3.fromHex("#1C3F3D"), -- Dark Teal background counterpart to PaleTeal
+	LightGrey = Color3.fromHex("#F3EAB1"), -- Cream as light text color
+}
+
+-- Classes
+GameConfig.CLASSES = {
+	Economist = {
+		DisplayName = "The Economist",
+		Color = Color3.fromHex("#E7B10A"),  -- Amber Gold
+		Description = "Lays down a glowing network for clean, zero-waste trade. Maps out fair-trade routes and ethical supply chains.",
+		Icon = "💰",
+	},
+	Cultivator = {
+		DisplayName = "The Cultivator",
+		Color = Color3.fromHex("#4B9C72"),   -- Sage Green
+		Description = "Acts as a high-speed seeder. Injects bio-gels to rapidly grow forests, restore soil, and protect the environment.",
+		Icon = "🌱",
+	},
+	Advocate = {
+		DisplayName = "The Advocate",
+		Color = Color3.fromHex("#F6757D"),  -- Coral Pink
+		Description = "Uses smart-dust to create safe zones. Maps out cultural spaces and ensures resources are shared equally for a fair community.",
+		Icon = "💜",
+	},
+}
+
+-- Painting
+GameConfig.PAINT_SIZE_DEFAULT = 12
+GameConfig.PAINT_SIZE_POWERUP = 28
+GameConfig.PAINT_INTERVAL = 0.08
+GameConfig.POWERUP_DURATION = 5
+
+-- Coins
+GameConfig.COIN_COLOR = Color3.fromHex("#ff8a27")
+GameConfig.COIN_COUNT = 160
+GameConfig.COIN_RESPAWN_TIME = 12
+
+-- Debris
+GameConfig.DEBRIS_COUNT = 120
+GameConfig.DEBRIS_ORBIT_HEIGHT = 20 -- above planet surface
+
+-- Game
+GameConfig.GAME_DURATION = 60 -- seconds
+GameConfig.WIN_THRESHOLD = 0.80 -- 80%
+
+-- Coverage tracking
+GameConfig.GRID_RESOLUTION = 80 -- subdivisions per axis for coverage grid
+
+-- Match / Teleport
+GameConfig.MATCH_PLACE_ID = 0 -- SET THIS to your Match Place ID after creating it in Game Explorer
+GameConfig.COUNTDOWN_DURATION = 5 -- seconds countdown before teleporting from pad
+GameConfig.RETURN_TO_LOBBY_DELAY = 10 -- seconds after match ends before returning to lobby
+GameConfig.MATCH_LOAD_TIMEOUT = 30 -- seconds to wait for players to arrive on match server
+
+return GameConfig
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="ModuleScript" referent="3">
+      <Properties>
+        <string name="Name">Hello</string>
+        <string name="Source"><![CDATA[return function()
+	print("Hello, world!")
+end
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="Folder" referent="4">
+      <Properties>
+        <string name="Name">Remotes</string>
+      </Properties>
+      <Item class="RemoteEvent" referent="5">
+        <Properties>
+          <string name="Name">CoinCollected</string>
+        </Properties>
+      </Item>
+      <Item class="RemoteEvent" referent="6">
+        <Properties>
+          <string name="Name">GameStateChanged</string>
+        </Properties>
+      </Item>
+      <Item class="RemoteEvent" referent="7">
+        <Properties>
+          <string name="Name">PaintTrail</string>
+        </Properties>
+      </Item>
+      <Item class="RemoteEvent" referent="8">
+        <Properties>
+          <string name="Name">PowerupActivated</string>
+        </Properties>
+      </Item>
+      <Item class="RemoteEvent" referent="9">
+        <Properties>
+          <string name="Name">QueueUpdate</string>
+        </Properties>
+      </Item>
+      <Item class="RemoteEvent" referent="10">
+        <Properties>
+          <string name="Name">ReturnToLobby</string>
+        </Properties>
+      </Item>
+      <Item class="RemoteEvent" referent="11">
+        <Properties>
+          <string name="Name">SelectClass</string>
+        </Properties>
+      </Item>
+      <Item class="RemoteEvent" referent="12">
+        <Properties>
+          <string name="Name">StartGameClient</string>
+        </Properties>
+      </Item>
+      <Item class="RemoteEvent" referent="13">
+        <Properties>
+          <string name="Name">UpdateProgress</string>
+        </Properties>
+      </Item>
+    </Item>
+    <Item class="Model" referent="14">
+      <Properties>
+        <string name="Name">SphereCharacter</string>
+        <bool name="NeedsPivotMigration">false</bool>
+      </Properties>
+      <Item class="Part" referent="15">
+        <Properties>
+          <string name="Name">HumanoidRootPart</string>
+          <bool name="CanCollide">true</bool>
+          <bool name="Massless">true</bool>
+          <token name="shape">0</token>
+          <Vector3 name="size">
+            <X>2</X>
+            <Y>2</Y>
+            <Z>2</Z>
+          </Vector3>
+          <float name="Transparency">1</float>
+        </Properties>
+      </Item>
+    </Item>
+  </Item>
+  <Item class="ServerScriptService" referent="16">
+    <Properties>
+      <string name="Name">ServerScriptService</string>
+    </Properties>
+    <Item class="Script" referent="17">
+      <Properties>
+        <string name="Name">BlueprintManager</string>
+        <token name="RunContext">0</token>
+        <string name="Source"><![CDATA[-- BlueprintManager: Handles Holographic Capture & Build mechanic
+-- Only runs on match servers
+local Workspace = game:GetService("Workspace")
+local RS = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+local GameConfig = require(RS:WaitForChild("GameConfig"))
+
+-- Skip on lobby servers
+if game.PrivateServerId == "" or game.PrivateServerOwnerId ~= 0 then
+	print("[EcoSphere] BlueprintManager: Skipping — lobby server")
+	return
+end
+
+-- OverlapParams for checking players in CaptureZone
+local overlapParams = OverlapParams.new()
+overlapParams.FilterType = Enum.RaycastFilterType.Include
+
+local blueprintColor = Color3.fromRGB(0, 255, 255) -- Neon Teal
+
+local function stylePart(part)
+    part.Material = Enum.Material.ForceField
+    part.Color = blueprintColor
+    part.Transparency = 0.8
+    part.CanCollide = false
+    part.Anchored = true
+    part.CastShadow = false
+end
+
+local function addCaptureZone(model)
+    local cf, size = model:GetBoundingBox()
+    local pivot = model:GetPivot()
+    local centerPos = pivot.Position
+    
+    -- Raycast towards the planet (0,0,0) to find the exact floor surface
+    local rayDir = (Vector3.new(0,0,0) - centerPos).Unit * 500
+    local rayParams = RaycastParams.new()
+    rayParams.FilterType = Enum.RaycastFilterType.Exclude
+    rayParams.FilterDescendantsInstances = {model}
+    
+    local rayResult = Workspace:Raycast(centerPos, rayDir, rayParams)
+    
+    local floorPos, floorNormal
+    if rayResult then
+        floorPos = rayResult.Position
+        floorNormal = rayResult.Normal
+    else
+        floorPos = centerPos - (centerPos.Unit * (size.Y/2))
+        floorNormal = centerPos.Unit
+    end
+    
+    -- Build a CFrame perfectly aligned with the floor
+    local up = floorNormal
+    local right = pivot.RightVector
+    if math.abs(right:Dot(up)) > 0.99 then
+        right = pivot.LookVector
+    end
+    local forward = right:Cross(up).Unit
+    right = up:Cross(forward).Unit
+    local surfaceCFrame = CFrame.fromMatrix(floorPos, right, up, forward)
+    
+    -- Calculate radius based on all dimensions since model might be rotated
+    local assetRadius = math.max(size.X, size.Y, size.Z) / 2
+    local zoneRadius = assetRadius + 50
+    local diameter = zoneRadius * 2
+
+    local captureZone = Instance.new("Part")
+    captureZone.Name = "CaptureZone"
+    captureZone.Shape = Enum.PartType.Cylinder
+    captureZone.Size = Vector3.new(100, diameter, diameter) 
+    captureZone.Transparency = 1
+    captureZone.CanCollide = false
+    captureZone.Anchored = true
+    captureZone.Color = Color3.new(1,0,0)
+    
+    -- Stand it up perfectly at the surface
+    captureZone.CFrame = surfaceCFrame * CFrame.Angles(0, 0, math.rad(90))
+    captureZone.Parent = model
+    
+    -- Thin glowing line
+    local ringAnchor = Instance.new("Part")
+    ringAnchor.Name = "NeonRing"
+    ringAnchor.Size = Vector3.new(1,1,1)
+    ringAnchor.Transparency = 1
+    ringAnchor.CanCollide = false
+    ringAnchor.Anchored = true
+    ringAnchor.CFrame = surfaceCFrame * CFrame.new(0, 1, 0) -- Hover slightly above ground
+    ringAnchor.Parent = model
+    
+    local line = Instance.new("CylinderHandleAdornment")
+    line.Name = "Adornment"
+    line.InnerRadius = zoneRadius - 0.5 -- Very thin 0.5 stud line
+    line.Radius = zoneRadius
+    line.Height = 0.2
+    line.Color3 = blueprintColor
+    line.Transparency = 0 -- Fully solid glow
+    line.AlwaysOnTop = false
+    line.Adornee = ringAnchor
+    line.CFrame = CFrame.Angles(math.rad(90), 0, 0)
+    line.Parent = ringAnchor
+    
+    local bg = Instance.new("BillboardGui")
+    bg.Name = "CaptureUI"
+    bg.Size = UDim2.new(0, 100, 0, 15)
+    bg.StudsOffset = Vector3.new(0, 20, 0)
+    bg.AlwaysOnTop = true
+    bg.Enabled = false
+    bg.Parent = captureZone
+    
+    local barBg = Instance.new("Frame")
+    barBg.Name = "BarBg"
+    barBg.Size = UDim2.new(1, 0, 1, 0)
+    barBg.BackgroundColor3 = Color3.fromRGB(30, 40, 40)
+    barBg.BorderSizePixel = 0
+    barBg.Parent = bg
+    
+    local fill = Instance.new("Frame")
+    fill.Name = "Fill"
+    fill.Size = UDim2.new(0, 0, 1, 0)
+    fill.BackgroundColor3 = blueprintColor
+    fill.BorderSizePixel = 0
+    fill.Parent = barBg
+end
+
+local function setupBlueprints()
+    local blueprintsFolder = Workspace:WaitForChild("Blueprints")
+    if not blueprintsFolder then 
+        warn("[EcoSphere-Debug] Blueprints folder not found!")
+        return 
+    end
+
+    task.wait(1) -- Wait for all static objects inside the folder to finish loading
+
+    local children = blueprintsFolder:GetChildren()
+    warn("[EcoSphere-Debug] Found " .. #children .. " models in Blueprints")
+
+    for _, model in ipairs(children) do
+        if model:IsA("Model") then
+            warn("[EcoSphere-Debug] Processing model: " .. model.Name)
+            -- Strip original colors and make them holograms
+            for _, child in ipairs(model:GetDescendants()) do
+                if child:IsA("BasePart") then
+                    child:SetAttribute("OriginalColor", child.Color)
+                    child:SetAttribute("OriginalMaterial", child.Material.Name)
+                    child:SetAttribute("OriginalTransparency", child.Transparency)
+                    child.Material = Enum.Material.ForceField
+                    child.Color = blueprintColor
+                    child.Transparency = 0.8
+                    child.CanCollide = false
+                    child.Anchored = true
+                    child.CastShadow = false
+                end
+            end
+            
+            -- Ensure a primary part exists
+            if not model.PrimaryPart then
+                local parts = {}
+                for _, child in ipairs(model:GetDescendants()) do
+                    if child:IsA("BasePart") then table.insert(parts, child) end
+                end
+                if #parts > 0 then model.PrimaryPart = parts[1] end
+            end
+
+            warn("[EcoSphere-Debug] Adding capture zone for " .. model.Name)
+            addCaptureZone(model)
+        end
+    end
+    
+    return blueprintsFolder
+end
+
+local function getPlayersInZone(zone)
+    local chars = {}
+    for _, player in ipairs(Players:GetPlayers()) do
+        if player.Character then
+            table.insert(chars, player.Character)
+        end
+    end
+    overlapParams.FilterDescendantsInstances = chars
+    
+    if #chars == 0 then return {}, 0, nil end
+    
+    local parts = Workspace:GetPartsInPart(zone, overlapParams)
+    local playersInside = {}
+    local uniqueClasses = {}
+    local classCount = 0
+    local firstClassColor = nil
+    
+    for _, part in ipairs(parts) do
+        local char = part:FindFirstAncestorWhichIsA("Model")
+        if char then
+            local player = Players:GetPlayerFromCharacter(char)
+            if player and not table.find(playersInside, player) then
+                table.insert(playersInside, player)
+                local pClass = char:GetAttribute("Class")
+                if pClass then
+                    if not uniqueClasses[pClass] then
+                        uniqueClasses[pClass] = true
+                        classCount = classCount + 1
+                        if not firstClassColor then
+                            firstClassColor = GameConfig.CLASSES[pClass].Color
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return playersInside, classCount, firstClassColor
+end
+
+local function applyArchitectSurge(players)
+    for _, player in ipairs(players) do
+        local char = player.Character
+        if char then
+            char:SetAttribute("ArchitectSurge", true)
+            task.delay(10, function()
+                if char and char:GetAttribute("ArchitectSurge") then
+                    char:SetAttribute("ArchitectSurge", nil)
+                end
+            end)
+        end
+    end
+end
+
+local function blossomBlueprint(model, classCount, firstClassColor, playersInside)
+    local isHarmony = (classCount >= 2)
+    local finalColor = isHarmony and Color3.new(1, 1, 1) or (firstClassColor or Color3.fromRGB(0, 255, 255))
+    local finalMaterial = isHarmony and Enum.Material.Neon or Enum.Material.SmoothPlastic
+    
+    local duration = 1.0
+    local steps = 30
+    local stepTime = duration / steps
+    
+    local parts = {}
+    for _, child in ipairs(model:GetDescendants()) do
+        if child:IsA("BasePart") and child.Name ~= "CaptureZone" and child.Name ~= "NeonRing" then
+            table.insert(parts, child)
+            child.CanCollide = true
+        end
+    end
+    
+    local startColor = Color3.fromRGB(0, 255, 255)
+    
+    local primary = model.PrimaryPart or parts[1]
+    if primary then
+        local att = Instance.new("Attachment", primary)
+        local emit = Instance.new("ParticleEmitter")
+        emit.Lifetime = NumberRange.new(2, 3)
+        emit.Speed = NumberRange.new(20, 50)
+        emit.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 2), NumberSequenceKeypoint.new(1, 0)})
+        emit.SpreadAngle = Vector2.new(180, 180)
+        emit.Rate = 0
+        emit.Parent = att
+        
+        if isHarmony then
+            emit.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.new(1,0,0)),
+                ColorSequenceKeypoint.new(0.33, Color3.new(0,1,0)),
+                ColorSequenceKeypoint.new(0.66, Color3.new(0,0,1)),
+                ColorSequenceKeypoint.new(1, Color3.new(1,0,1))
+            })
+            emit:Emit(150)
+        else
+            emit.Color = ColorSequence.new(Color3.fromRGB(100, 255, 100))
+            emit:Emit(80)
+        end
+        task.delay(4, function() att:Destroy() end)
+    end
+    
+    task.spawn(function()
+        for i = 1, steps do
+            local alpha = i / steps
+            for _, part in ipairs(parts) do
+                local origTrans = part:GetAttribute("OriginalTransparency") or 0
+                part.Transparency = 0.8 + (origTrans - 0.8) * alpha
+                
+                local origColor = part:GetAttribute("OriginalColor") or Color3.new(1, 1, 1)
+                part.Color = startColor:Lerp(origColor, alpha)
+                
+                if i == steps then
+                    local matName = part:GetAttribute("OriginalMaterial")
+                    if matName then
+                        part.Material = Enum.Material[matName]
+                    else
+                        part.Material = Enum.Material.SmoothPlastic
+                    end
+                end
+            end
+            task.wait(stepTime)
+        end
+    end)
+    
+    applyArchitectSurge(playersInside)
+end
+
+local blueprintsFolder = setupBlueprints()
+
+if blueprintsFolder then
+    for _, model in ipairs(blueprintsFolder:GetChildren()) do
+        local zone = model:FindFirstChild("CaptureZone")
+        if zone then
+            local bg = zone:FindFirstChild("CaptureUI")
+            local fill = bg and bg:FindFirstChild("BarBg") and bg.BarBg:FindFirstChild("Fill")
+            
+            local progress = 0
+            local captured = false
+            
+            task.spawn(function()
+                while not captured and model.Parent do
+                    local dt = task.wait(0.1)
+                    local playersInside, classCount, firstClassColor = getPlayersInZone(zone)
+                    local numPlayers = #playersInside
+                    
+                    if numPlayers > 0 then
+                        bg.Enabled = true
+                        local speedMult = numPlayers
+                        progress = math.clamp(progress + (dt * speedMult * 0.2), 0, 1)
+                        
+                        if fill then
+                            TweenService:Create(fill, TweenInfo.new(0.1, Enum.EasingStyle.Linear), {
+                                Size = UDim2.new(progress, 0, 1, 0)
+                            }):Play()
+                        end
+                        
+                        if progress >= 1.0 then
+                            captured = true
+                            bg:Destroy()
+                            zone:Destroy()
+                            local ring = model:FindFirstChild("NeonRing")
+                            if ring then ring:Destroy() end
+                            blossomBlueprint(model, classCount, firstClassColor, playersInside)
+                        end
+                    else
+                        if progress > 0 then
+                            progress = 0
+                            bg.Enabled = false
+                            if fill then fill.Size = UDim2.new(0, 0, 1, 0) end
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end
+print("[EcoSphere] BlueprintManager initialized")
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="Script" referent="18">
+      <Properties>
+        <string name="Name">CoinSpawner</string>
+        <token name="RunContext">0</token>
+        <string name="Source">-- CoinSpawner: Spawns glowing coins around the planet and handles collection
+-- Only runs on match servers
+local Workspace = game:GetService("Workspace")
+local RS = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local GameConfig = require(RS:WaitForChild("GameConfig"))
+local Remotes = RS:WaitForChild("Remotes")
+
+-- Skip on lobby servers
+if game.PrivateServerId == "" or game.PrivateServerOwnerId ~= 0 then
+	print("[EcoSphere] CoinSpawner: Skipping — lobby server")
+	return
+end
+
+local coinsFolder = Workspace:WaitForChild("Coins")
+local planet = Workspace:WaitForChild("PlanetBase")
+
+local function randomPointOnSphere(radius)
+	local theta = math.random() * 2 * math.pi
+	local phi = math.acos(2 * math.random() - 1)
+	local x = radius * math.sin(phi) * math.cos(theta)
+	local y = radius * math.sin(phi) * math.sin(theta)
+	local z = radius * math.cos(phi)
+	return Vector3.new(x, y, z)
+end
+
+local function createCoin(index)
+	local surfaceRadius = GameConfig.PLANET_RADIUS + 5
+	local pos = GameConfig.PLANET_CENTER + randomPointOnSphere(surfaceRadius)
+
+	local coin = Instance.new("Part")
+	coin.Name = "Coin_" .. index
+	coin.Shape = Enum.PartType.Block
+	coin.Size = Vector3.new(3, 3, 3)
+	coin.Material = Enum.Material.Neon
+	coin.Color = Color3.fromRGB(150, 255, 100) -- Glowing nature green
+	coin.Anchored = true
+	coin.CanCollide = false
+	coin.TopSurface = Enum.SurfaceType.Smooth
+	coin.BottomSurface = Enum.SurfaceType.Smooth
+
+	-- Orient coin to face outward from planet
+	local upDir = (pos - GameConfig.PLANET_CENTER).Unit
+	local rightDir = upDir:Cross(Vector3.new(0, 1, 0))
+	if rightDir.Magnitude &lt; 0.01 then
+		rightDir = upDir:Cross(Vector3.new(1, 0, 0))
+	end
+	rightDir = rightDir.Unit
+	local lookDir = rightDir:Cross(upDir).Unit
+
+	coin.CFrame = CFrame.new(pos) * CFrame.fromMatrix(Vector3.zero, rightDir, upDir, -lookDir)
+
+	-- Add a PointLight for glow
+	local light = Instance.new("PointLight")
+	light.Color = GameConfig.COIN_COLOR
+	light.Brightness = 2
+	light.Range = 12
+	light.Parent = coin
+
+	coin.Parent = coinsFolder
+
+	-- Spin animation
+	task.spawn(function()
+		local startCF = coin.CFrame
+		local t = math.random() * math.pi * 2
+		while coin and coin.Parent do
+			t = t + 0.02
+			local bobOffset = upDir * math.sin(t * 2) * 1.5
+			-- Spin on multiple axes for a floating crystal look
+			coin.CFrame = CFrame.new(pos + bobOffset) * CFrame.fromMatrix(Vector3.zero, rightDir, upDir, -lookDir) * CFrame.Angles(math.pi/4, t, math.pi/4)
+			task.wait()
+		end
+	end)
+
+	return coin
+end
+
+-- Touch detection for coins
+local function setupCoinTouch(coin)
+	coin.Touched:Connect(function(hit)
+		if not coin.Parent then return end
+		local character = hit.Parent
+		if not character then return end
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if not humanoid then return end
+		local player = Players:GetPlayerFromCharacter(character)
+		if not player then return end
+
+		-- Collect the coin
+		local coinPos = coin.Position
+		coin:Destroy()
+
+		-- Notify client for powerup
+		Remotes.CoinCollected:FireClient(player)
+		Remotes.PowerupActivated:FireClient(player, GameConfig.POWERUP_DURATION)
+		player:SetAttribute("PowerupEndTime", tick() + GameConfig.POWERUP_DURATION)
+
+		-- Respawn coin after delay
+		task.delay(GameConfig.COIN_RESPAWN_TIME, function()
+			local newCoin = createCoin(math.random(1000, 9999))
+			setupCoinTouch(newCoin)
+		end)
+	end)
+end
+
+-- Spawn initial coins
+for i = 1, GameConfig.COIN_COUNT do
+	local coin = createCoin(i)
+	setupCoinTouch(coin)
+end
+
+print("[EcoSphere] Coins spawned:", GameConfig.COIN_COUNT)</string>
+      </Properties>
+    </Item>
+    <Item class="Script" referent="19">
+      <Properties>
+        <string name="Name">DebrisSpawner</string>
+        <token name="RunContext">0</token>
+        <string name="Source"><![CDATA[-- DebrisSpawner: Creates orbital debris around the planet
+-- Only runs on match servers
+local Workspace = game:GetService("Workspace")
+local RS = game:GetService("ReplicatedStorage")
+local GameConfig = require(RS:WaitForChild("GameConfig"))
+
+-- Skip on lobby servers
+if game.PrivateServerId == "" or game.PrivateServerOwnerId ~= 0 then
+	print("[EcoSphere] DebrisSpawner: Skipping — lobby server")
+	return
+end
+
+local debrisFolder = Workspace:WaitForChild("OrbitalDebris")
+local planet = Workspace:WaitForChild("PlanetBase")
+
+local THEMES = {
+	{Material = Enum.Material.Grass, Color = Color3.fromHex("#bdbc69"), Shapes = {Enum.PartType.Ball, Enum.PartType.Block}},
+	{Material = Enum.Material.WoodPlanks, Color = Color3.fromHex("#925a3e"), Shapes = {Enum.PartType.Block, Enum.PartType.Cylinder}},
+	{Material = Enum.Material.Glass, Color = Color3.fromHex("#3d94c0"), Shapes = {Enum.PartType.Block}},
+	{Material = Enum.Material.CorrodedMetal, Color = Color3.fromHex("#829693"), Shapes = {Enum.PartType.Wedge, Enum.PartType.Cylinder}}
+}
+
+local function randomPointOnSphere(radius)
+	local theta = math.random() * 2 * math.pi
+	local phi = math.acos(2 * math.random() - 1)
+	local x = radius * math.sin(phi) * math.cos(theta)
+	local y = radius * math.sin(phi) * math.sin(theta)
+	local z = radius * math.cos(phi)
+	return Vector3.new(x, y, z)
+end
+
+local function spawnDebris()
+	for i = 1, GameConfig.DEBRIS_COUNT do
+		local orbitRadius = GameConfig.PLANET_RADIUS + GameConfig.DEBRIS_ORBIT_HEIGHT + math.random(5, 40)
+		local pos = GameConfig.PLANET_CENTER + randomPointOnSphere(orbitRadius)
+
+		local debris = Instance.new("Part")
+		debris.Name = "Debris_" .. i
+		local theme = THEMES[math.random(1, #THEMES)]
+		debris.Shape = theme.Shapes[math.random(1, #theme.Shapes)]
+
+		local sx = math.random(4, 16)
+		local sy = math.random(4, 12)
+		local sz = math.random(4, 16)
+		
+		-- If it's a glass solar panel, make it flat
+		if theme.Material == Enum.Material.Glass then
+			sy = 1
+			sx = math.random(10, 20)
+			sz = math.random(10, 20)
+		end
+
+		debris.Size = Vector3.new(sx, sy, sz)
+		debris.Position = pos
+		debris.Anchored = false
+		debris.CanCollide = true
+		debris.Material = theme.Material
+		debris.Color = theme.Color
+		debris.TopSurface = Enum.SurfaceType.Smooth
+		debris.BottomSurface = Enum.SurfaceType.Smooth
+
+		-- Bouncy physics
+		debris.CustomPhysicalProperties = PhysicalProperties.new(
+			0.3,  -- low density (floaty)
+			0.2,  -- low friction
+			0.9,  -- high elasticity (bouncy)
+			1, 1
+		)
+
+		-- Gravity attachment for debris
+		local att = Instance.new("Attachment")
+		att.Parent = debris
+
+		-- Pull debris toward planet (weak gravity so they float)
+		local vf = Instance.new("VectorForce")
+		vf.Attachment0 = att
+		vf.RelativeTo = Enum.ActuatorRelativeTo.World
+		local dirToCenter = (GameConfig.PLANET_CENTER - pos).Unit
+		local antiGravity = Vector3.new(0, debris:GetMass() * Workspace.Gravity, 0)
+		vf.Force = (dirToCenter * debris:GetMass() * 30) + antiGravity
+		vf.Parent = debris
+
+		-- Random initial rotation
+		debris.CFrame = CFrame.new(pos) * CFrame.Angles(
+			math.random() * math.pi * 2,
+			math.random() * math.pi * 2,
+			math.random() * math.pi * 2
+		)
+
+		debris.Parent = debrisFolder
+	end
+end
+
+spawnDebris()
+print("[EcoSphere] Orbital debris spawned:", GameConfig.DEBRIS_COUNT)
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="Script" referent="20">
+      <Properties>
+        <string name="Name">GameManager</string>
+        <token name="RunContext">0</token>
+        <string name="Source">-- GameManager: Master timer, win/fail logic, game state coordination
+-- Works on both lobby (inactive) and match servers (active)
+local Workspace = game:GetService("Workspace")
+local RS = game:GetService("ReplicatedStorage")
+local SSS = game:GetService("ServerScriptService")
+local Players = game:GetService("Players")
+local GameConfig = require(RS:WaitForChild("GameConfig"))
+local Remotes = RS:WaitForChild("Remotes")
+
+-- Determine if this is a match server
+local isMatchServer = (game.PrivateServerId ~= "" and game.PrivateServerOwnerId == 0)
+
+if not isMatchServer then
+	print("[EcoSphere] GameManager: Lobby mode — waiting for match server context")
+	-- On lobby servers, the game manager just sits idle
+	-- The old flow of starting a game in the same server is replaced by TeleportService
+	return
+end
+
+print("[EcoSphere] GameManager: Running on match server")
+
+local paintSystem = SSS:WaitForChild("PaintingSystem")
+local getCoverage = paintSystem:WaitForChild("GetCoverage")
+local drainPaint = paintSystem:WaitForChild("DrainPaint")
+
+local gameState = "waiting" -- waiting, playing, victory, defeat
+local timeRemaining = GameConfig.GAME_DURATION
+local gameStartTime = 0
+
+-- On match servers, start the game automatically once a player arrives and is set up
+local function startGame()
+	if gameState ~= "waiting" then return end
+	
+	gameState = "playing"
+	gameStartTime = tick()
+	timeRemaining = GameConfig.GAME_DURATION
+	Remotes.GameStateChanged:FireAllClients("playing", timeRemaining)
+	print("[EcoSphere] Match started! Timer:", GameConfig.GAME_DURATION, "seconds")
+end
+
+-- Auto-start: wait for the first player to have a sphere character (set up by MatchBootstrap)
+task.spawn(function()
+	-- Wait for at least one player to arrive and get their sphere character
+	local waited = 0
+	while waited &lt; GameConfig.MATCH_LOAD_TIMEOUT do
+		task.wait(0.5)
+		waited = waited + 0.5
+		
+		for _, player in ipairs(Players:GetPlayers()) do
+			local char = player.Character
+			if char and char:FindFirstChild("PlanetGravity", true) then
+				-- Player has been set up as a sphere — start the game after a brief delay
+				print("[EcoSphere] GameManager: First sphere player detected, starting match in 3s...")
+				task.wait(3)
+				startGame()
+				return
+			end
+		end
+	end
+	
+	warn("[EcoSphere] GameManager: Timed out waiting for players, no match started")
+end)
+
+-- Also support the old SelectClass event as a fallback game start trigger
+local selectClassRemote = Remotes:FindFirstChild("SelectClass")
+if selectClassRemote then
+	selectClassRemote.OnServerEvent:Connect(function(player, className)
+		if gameState == "waiting" then
+			-- Give a brief delay then start
+			task.delay(2, function()
+				startGame()
+			end)
+		end
+	end)
+end
+
+-- End of match: return to lobby
+local function endMatch(result)
+	-- Try to call MatchBootstrap's returnToLobby
+	local matchBootstrap = SSS:FindFirstChild("MatchBootstrap")
+	if matchBootstrap then
+		local returnEvent = matchBootstrap:FindFirstChild("ReturnToLobby")
+		if returnEvent then
+			task.spawn(function()
+				returnEvent:Fire()
+			end)
+		end
+	end
+end
+
+-- Game loop
+task.spawn(function()
+	while true do
+		task.wait(0.5)
+
+		if gameState == "playing" then
+			timeRemaining = GameConfig.GAME_DURATION - (tick() - gameStartTime)
+
+			if timeRemaining &lt;= 0 then
+				timeRemaining = 0
+
+				-- Check coverage
+				local coverage = getCoverage:Invoke()
+				local allAbove = true
+				for className, pct in pairs(coverage) do
+					if pct &lt; GameConfig.WIN_THRESHOLD then
+						allAbove = false
+						break
+					end
+				end
+
+				if allAbove then
+					-- VICTORY
+					gameState = "victory"
+					Remotes.GameStateChanged:FireAllClients("victory", 0)
+					print("[EcoSphere] VICTORY! All classes reached", GameConfig.WIN_THRESHOLD * 100, "% coverage!")
+
+					-- Spawn confetti particles on all players
+					for _, player in ipairs(Players:GetPlayers()) do
+						local char = player.Character
+						if char then
+							local root = char:FindFirstChild("HumanoidRootPart")
+							if root then
+								local confetti = Instance.new("ParticleEmitter")
+								confetti.Name = "VictoryConfetti"
+								confetti.Rate = 200
+								confetti.Lifetime = NumberRange.new(2, 4)
+								confetti.Speed = NumberRange.new(20, 50)
+								confetti.SpreadAngle = Vector2.new(180, 180)
+								confetti.Color = ColorSequence.new({
+									ColorSequenceKeypoint.new(0, Color3.fromHex("#e1c074")),
+									ColorSequenceKeypoint.new(0.33, Color3.fromHex("#699254")),
+									ColorSequenceKeypoint.new(0.66, Color3.fromHex("#d06a49")),
+									ColorSequenceKeypoint.new(1, Color3.fromHex("#7faec6")),
+								})
+								confetti.Size = NumberSequence.new({
+									NumberSequenceKeypoint.new(0, 1),
+									NumberSequenceKeypoint.new(1, 0),
+								})
+								confetti.RotSpeed = NumberRange.new(-180, 180)
+								confetti.Parent = root
+							end
+						end
+					end
+
+					-- Play victory sound
+					local chord = Instance.new("Sound")
+					chord.Name = "VictoryChord"
+					chord.SoundId = "rbxassetid://1837849285" -- triumphant chord
+					chord.Volume = 0.8
+					chord.Playing = true
+					chord.Parent = Workspace
+
+					-- Return to lobby
+					endMatch("victory")
+				else
+					-- DEFEAT
+					gameState = "defeat"
+					Remotes.GameStateChanged:FireAllClients("defeat", 0)
+					print("[EcoSphere] DEFEAT! Time ran out.")
+
+					-- Drain paint to grayscale
+					drainPaint:Fire()
+
+					-- Play sad sound
+					local failSound = Instance.new("Sound")
+					failSound.Name = "DefeatSound"
+					failSound.SoundId = "rbxassetid://5229717430" -- defeat sound
+					failSound.Volume = 0.6
+					failSound.Playing = true
+					failSound.Parent = Workspace
+
+					-- Return to lobby
+					endMatch("defeat")
+				end
+
+			else
+				-- Check for early win
+				local coverage = getCoverage:Invoke()
+				local allAbove = true
+				for className, pct in pairs(coverage) do
+					if pct &lt; GameConfig.WIN_THRESHOLD then
+						allAbove = false
+						break
+					end
+				end
+
+				if allAbove then
+					-- EARLY VICTORY
+					gameState = "victory"
+					Remotes.GameStateChanged:FireAllClients("victory", timeRemaining)
+					print("[EcoSphere] EARLY VICTORY with", math.floor(timeRemaining), "seconds remaining!")
+
+					-- Spawn confetti
+					for _, player in ipairs(Players:GetPlayers()) do
+						local char = player.Character
+						if char then
+							local root = char:FindFirstChild("HumanoidRootPart")
+							if root then
+								local confetti = Instance.new("ParticleEmitter")
+								confetti.Rate = 200
+								confetti.Lifetime = NumberRange.new(2, 4)
+								confetti.Speed = NumberRange.new(20, 50)
+								confetti.SpreadAngle = Vector2.new(180, 180)
+								confetti.Color = ColorSequence.new({
+									ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 200, 50)),
+									ColorSequenceKeypoint.new(0.33, Color3.fromRGB(0, 255, 100)),
+									ColorSequenceKeypoint.new(0.66, Color3.fromRGB(255, 80, 150)),
+									ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 200, 255)),
+								})
+								confetti.Size = NumberSequence.new({
+									NumberSequenceKeypoint.new(0, 1),
+									NumberSequenceKeypoint.new(1, 0),
+								})
+								confetti.Parent = root
+							end
+						end
+					end
+
+					local chord = Instance.new("Sound")
+					chord.SoundId = "rbxassetid://1837849285"
+					chord.Volume = 0.8
+					chord.Playing = true
+					chord.Parent = Workspace
+
+					-- Return to lobby
+					endMatch("victory")
+				end
+
+				-- Broadcast timer
+				Remotes.GameStateChanged:FireAllClients("timer", timeRemaining)
+			end
+		end
+	end
+end)
+
+print("[EcoSphere] GameManager initialized (match server mode)")</string>
+      </Properties>
+    </Item>
+    <Item class="Script" referent="21">
+      <Properties>
+        <string name="Name">LobbyManager</string>
+        <token name="RunContext">0</token>
+        <string name="Source"><![CDATA[-- LobbyManager: Queue system with countdown and TeleportService
+-- Only runs on the LOBBY server (start place)
+local TeleportService = game:GetService("TeleportService")
+local Workspace = game:GetService("Workspace")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local RS = game:GetService("ReplicatedStorage")
+local GameConfig = require(RS:WaitForChild("GameConfig"))
+local Remotes = RS:WaitForChild("Remotes")
+
+-- Skip this script entirely on match (reserved) servers
+if game.PrivateServerId ~= "" and game.PrivateServerOwnerId == 0 then
+	print("[EcoSphere] LobbyManager: Skipping — this is a match server")
+	return
+end
+
+local Lobby = Workspace:WaitForChild("Lobby")
+local classOptions = {"Economist", "Cultivator", "Advocate"}
+
+-- Dynamically discover ALL pads in the Lobby (supports multiple Solo/Duo/Trio Mode models)
+local padQueues = {} -- each entry: { model, requiredPlayers, pad, playersInZone, countdown, countdownThread }
+
+local function discoverPads()
+	for _, child in ipairs(Lobby:GetChildren()) do
+		if child:IsA("Model") then
+			local pad = child:FindFirstChild("Pad")
+			if pad then
+				local req = child:GetAttribute("RequiredPlayers")
+				if not req then
+					-- Infer from name
+					if child.Name == "Solo Mode" then
+						req = 1
+					elseif child.Name == "Duo Mode" then
+						req = 2
+					elseif child.Name == "Trio Mode" then
+						req = 3
+					end
+				end
+				if req then
+					table.insert(padQueues, {
+						model = child,
+						requiredPlayers = req,
+						pad = pad,
+						playersInZone = {},
+						countdown = -1, -- -1 = not counting down
+						countdownThread = nil,
+						teleporting = false,
+					})
+
+					-- Adjust BillboardGui height offset to float above head height
+					local bgui = pad:FindFirstChild("Info")
+					if bgui and bgui:IsA("BillboardGui") then
+						bgui.StudsOffset = Vector3.new(0, 7, 0)
+					end
+				end
+			end
+		end
+	end
+	print("[EcoSphere] LobbyManager: Discovered", #padQueues, "pads")
+end
+
+discoverPads()
+
+-- Teleport effect (visual cue before actual teleport)
+local function playTeleportEffect(position, classColor)
+	local beam = Instance.new("Part")
+	beam.Name = "TeleportBeam"
+	beam.Shape = Enum.PartType.Cylinder
+	beam.Size = Vector3.new(80, 8, 8)
+	beam.Color = classColor
+	beam.Material = Enum.Material.Neon
+	beam.Transparency = 0.2
+	beam.CanCollide = false
+	beam.Anchored = true
+	beam.CFrame = CFrame.new(position + Vector3.new(0, 40, 0)) * CFrame.Angles(0, 0, math.rad(90))
+	beam.Parent = workspace
+
+	local attachment = Instance.new("Attachment")
+	attachment.Position = Vector3.new(-40, 0, 0)
+	attachment.Parent = beam
+
+	local sparkles = Instance.new("ParticleEmitter")
+	sparkles.Color = ColorSequence.new(classColor)
+	sparkles.Texture = "rbxassetid://258129767"
+	sparkles.Rate = 120
+	sparkles.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1.4),
+		NumberSequenceKeypoint.new(1, 0)
+	})
+	sparkles.Lifetime = NumberRange.new(0.4, 1.0)
+	sparkles.Speed = NumberRange.new(12, 25)
+	sparkles.SpreadAngle = Vector2.new(45, 45)
+	sparkles.Acceleration = Vector3.new(0, 12, 0)
+	sparkles.Parent = attachment
+
+	local sound = Instance.new("Sound")
+	sound.SoundId = "rbxassetid://8413626241"
+	sound.Volume = 0.75
+	sound.Parent = beam
+	sound:Play()
+
+	task.spawn(function()
+		local TweenService = game:GetService("TweenService")
+		local tween = TweenService:Create(beam, TweenInfo.new(0.45, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+			Size = Vector3.new(80, 0, 0),
+			Transparency = 1
+		})
+		tween:Play()
+		tween.Completed:Wait()
+		beam:Destroy()
+	end)
+end
+
+-- Assign classes to a team
+local function assignClasses(players)
+	local available = {table.unpack(classOptions)}
+	-- Shuffle
+	for i = #available, 2, -1 do
+		local j = math.random(i)
+		available[i], available[j] = available[j], available[i]
+	end
+
+	local assignments = {}
+	for index, player in ipairs(players) do
+		assignments[player] = available[(index - 1) % #available + 1]
+	end
+	return assignments
+end
+
+-- Teleport a team to a match server
+local function teleportTeam(padData)
+	if padData.teleporting then return end
+	padData.teleporting = true
+
+	local playersToTeleport = {}
+	for _, player in ipairs(padData.playersInZone) do
+		if player.Parent then -- still connected
+			table.insert(playersToTeleport, player)
+		end
+	end
+
+	if #playersToTeleport < padData.requiredPlayers then
+		padData.teleporting = false
+		return
+	end
+
+	-- Assign classes and include in teleport data
+	local classAssignments = assignClasses(playersToTeleport)
+	local teleportData = {
+		matchMode = padData.model.Name,
+		requiredPlayers = padData.requiredPlayers,
+		lobbyPlaceId = game.PlaceId, -- So match server can teleport players back
+		classAssignments = {},
+	}
+
+	for player, className in pairs(classAssignments) do
+		teleportData.classAssignments[tostring(player.UserId)] = className
+	end
+
+	-- Play teleport effects
+	for player, className in pairs(classAssignments) do
+		local char = player.Character
+		if char and char.PrimaryPart then
+			playTeleportEffect(char:GetPivot().Position, GameConfig.CLASSES[className].Color)
+		end
+	end
+
+	task.wait(0.3) -- Brief delay for effect to play
+
+	-- Check MATCH_PLACE_ID is set
+	if GameConfig.MATCH_PLACE_ID == 0 then
+		warn("[EcoSphere] MATCH_PLACE_ID not set! Cannot teleport. Set it in GameConfig.lua")
+		for _, player in ipairs(playersToTeleport) do
+			-- Notify players of the error
+			Remotes.QueueUpdate:FireClient(player, "error", "Match server not configured! Please set MATCH_PLACE_ID.")
+		end
+		padData.teleporting = false
+		return
+	end
+
+	-- Reserve a private server and teleport
+	local success, result = pcall(function()
+		local accessCode = TeleportService:ReserveServer(GameConfig.MATCH_PLACE_ID)
+		TeleportService:TeleportToPrivateServer(
+			GameConfig.MATCH_PLACE_ID,
+			accessCode,
+			playersToTeleport,
+			nil, -- spawnName
+			teleportData
+		)
+		return true
+	end)
+
+	if not success then
+		warn("[EcoSphere] TeleportService failed:", result)
+		for _, player in ipairs(playersToTeleport) do
+			Remotes.QueueUpdate:FireClient(player, "error", "Teleport failed: " .. tostring(result))
+		end
+	else
+		print("[EcoSphere] Teleported", #playersToTeleport, "players to match server")
+	end
+
+	-- Reset pad state after a delay (let teleport complete)
+	task.delay(3, function()
+		padData.teleporting = false
+		padData.countdown = -1
+		padData.playersInZone = {}
+	end)
+end
+
+-- Get players standing on a specific pad
+local function getPlayersOnPad(pad)
+	local charsInZone = {}
+	local overlapParams = OverlapParams.new()
+	overlapParams.FilterType = Enum.RaycastFilterType.Include
+	local charList = {}
+	for _, p in ipairs(Players:GetPlayers()) do
+		if p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+			table.insert(charList, p.Character)
+		end
+	end
+	if #charList == 0 then return {} end
+	overlapParams.FilterDescendantsInstances = charList
+
+	-- Since the pad is rotated (RightVector/local X is vertical, local Y and Z are horizontal):
+	-- we expand X (vertical height) by 8 studs, and Y/Z (horizontal boundaries) by 2 studs.
+	local detectorSize = Vector3.new(pad.Size.X + 8, pad.Size.Y + 2, pad.Size.Z + 2)
+	local parts = Workspace:GetPartBoundsInBox(pad.CFrame, detectorSize, overlapParams)
+	local playersInZone = {}
+	local seen = {}
+	for _, part in ipairs(parts) do
+		local char = part:FindFirstAncestorWhichIsA("Model")
+		if char then
+			local player = Players:GetPlayerFromCharacter(char)
+			if player and not seen[player] then
+				seen[player] = true
+				table.insert(playersInZone, player)
+			end
+		end
+	end
+	return playersInZone
+end
+
+-- Main heartbeat loop — scan pads and manage countdowns
+RunService.Heartbeat:Connect(function()
+	for _, padData in ipairs(padQueues) do
+		if padData.teleporting then continue end
+
+		local pad = padData.pad
+		if not pad or not pad.Parent then continue end
+
+		-- Get current players on this pad
+		local playersOnPad = getPlayersOnPad(pad)
+		padData.playersInZone = playersOnPad
+
+		-- Update the BillboardGui text
+		local bgui = pad:FindFirstChild("Info")
+		local txt = bgui and bgui:FindFirstChild("TextLabel")
+
+		local count = #playersOnPad
+		local req = padData.requiredPlayers
+
+		if txt then
+			if padData.countdown > 0 then
+				txt.Text = "⏱ " .. math.ceil(padData.countdown)
+			else
+				txt.Text = "(" .. count .. "/" .. req .. ")"
+			end
+		end
+
+		-- Update dynamic icon lighting based on players on the pad
+		local iconsFrame = bgui and bgui:FindFirstChild("IconsFrame")
+		if iconsFrame then
+			for i = 1, req do
+				local icon = iconsFrame:FindFirstChild("PersonIcon_" .. i)
+				if icon and icon:IsA("ImageLabel") then
+					if i <= count then
+						icon.ImageTransparency = 0 -- fully lit when occupied
+					else
+						icon.ImageTransparency = 0.75 -- dimmed/semi-transparent when empty
+					end
+				end
+			end
+		end
+
+		-- Send queue updates to players on the pad
+		for _, player in ipairs(playersOnPad) do
+			Remotes.QueueUpdate:FireClient(player, "queue", {
+				padName = padData.model.Name,
+				current = count,
+				required = req,
+				countdown = padData.countdown > 0 and math.ceil(padData.countdown) or nil,
+			})
+		end
+
+		-- Check if we should start/continue/cancel countdown
+		if count >= req then
+			-- Start countdown if not already
+			if padData.countdown < 0 and not padData.countdownThread then
+				padData.countdown = GameConfig.COUNTDOWN_DURATION
+				padData.countdownThread = task.spawn(function()
+					while padData.countdown > 0 do
+						task.wait(0.1)
+						padData.countdown = padData.countdown - 0.1
+
+						-- Re-check if enough players are still on pad
+						local currentPlayers = getPlayersOnPad(pad)
+						if #currentPlayers < req then
+							-- Someone left — cancel countdown
+							padData.countdown = -1
+							padData.countdownThread = nil
+
+							-- Notify remaining players
+							for _, p in ipairs(currentPlayers) do
+								Remotes.QueueUpdate:FireClient(p, "cancelled", nil)
+							end
+							return
+						end
+					end
+
+					-- Countdown finished — teleport!
+					padData.countdownThread = nil
+					teleportTeam(padData)
+				end)
+			end
+		else
+			-- Not enough players — cancel any active countdown
+			if padData.countdown > 0 or padData.countdownThread then
+				padData.countdown = -1
+				if padData.countdownThread then
+					task.cancel(padData.countdownThread)
+					padData.countdownThread = nil
+				end
+			end
+		end
+	end
+end)
+
+print("[EcoSphere] LobbyManager initialized with", #padQueues, "pads")
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="Script" referent="22">
+      <Properties>
+        <string name="Name">MatchBootstrap</string>
+        <token name="RunContext">0</token>
+        <string name="Source"><![CDATA[-- MatchBootstrap: Initializes the match server when players arrive via TeleportService
+-- Only runs on MATCH servers (reserved private servers)
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+local RS = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local GameConfig = require(RS:WaitForChild("GameConfig"))
+local Remotes = RS:WaitForChild("Remotes")
+
+-- Only run on reserved (match) servers
+if game.PrivateServerId == "" or game.PrivateServerOwnerId ~= 0 then
+	print("[EcoSphere] MatchBootstrap: Skipping — this is NOT a reserved match server")
+	return
+end
+
+print("[EcoSphere] MatchBootstrap: Running on match server:", game.PrivateServerId)
+
+-- Class options for assignment
+local classOptions = {"Economist", "Cultivator", "Advocate"}
+local playerClasses = {} -- [player] = className
+
+-- Teleport data from the lobby (shared across all arriving players)
+local teleportData = nil
+
+-- Spawn a player as a sphere character with assigned class
+local function spawnAsSphere(player, assignedClass)
+	local oldChar = player.Character
+
+	local newChar = RS:WaitForChild("SphereCharacter"):Clone()
+	newChar.Name = player.Name
+
+	local root = newChar:WaitForChild("HumanoidRootPart")
+	root.Anchored = true
+	newChar:PivotTo(CFrame.new(0, 515, 0))
+
+	-- Create Humanoid BEFORE parenting (camera needs it)
+	local humanoid = Instance.new("Humanoid")
+	humanoid.Parent = newChar
+
+	newChar.Parent = workspace
+	player.Character = newChar
+
+	if oldChar then oldChar:Destroy() end
+
+	-- Create physics objects for planetary movement
+	local att = Instance.new("Attachment")
+	att.Parent = root
+
+	local gravityForce = Instance.new("VectorForce")
+	gravityForce.Name = "PlanetGravity"
+	gravityForce.RelativeTo = Enum.ActuatorRelativeTo.World
+	gravityForce.Force = Vector3.new(0, 0, 0)
+	gravityForce.Attachment0 = att
+	gravityForce.Parent = root
+
+	local att2 = Instance.new("Attachment")
+	att2.Parent = root
+
+	local rollTorque = Instance.new("AngularVelocity")
+	rollTorque.Name = "RollTorque"
+	rollTorque.RelativeTo = Enum.ActuatorRelativeTo.World
+	rollTorque.AngularVelocity = Vector3.new(0, 0, 0)
+	rollTorque.MaxTorque = 0
+	rollTorque.Attachment0 = att2
+	rollTorque.Parent = root
+
+	-- Create visual shell (the actual visible sphere)
+	local shell = Instance.new("Part")
+	shell.Name = "VisualShell"
+	shell.Shape = Enum.PartType.Ball
+	shell.Size = Vector3.new(6, 6, 6)
+	shell.Color = GameConfig.CLASSES[assignedClass].Color
+	shell.Material = Enum.Material.Glass
+	shell.Transparency = 0.5
+	shell.CanCollide = false
+	shell.Massless = true
+	shell.CastShadow = true
+
+	local shellWeld = Instance.new("Weld")
+	shellWeld.Name = "ShellWeld"
+	shellWeld.Part0 = root
+	shellWeld.Part1 = shell
+	shellWeld.C0 = CFrame.new()
+	shellWeld.Parent = shell
+
+	local mesh = Instance.new("SpecialMesh")
+	mesh.Name = "VisualMesh"
+	mesh.MeshType = Enum.MeshType.Sphere
+	mesh.Scale = Vector3.new(1, 1, 1)
+	mesh.Parent = shell
+
+	shell.Parent = newChar
+
+	-- Set class attribute for PaintingSystem and SphereVisuals
+	newChar:SetAttribute("Class", assignedClass)
+	playerClasses[player] = assignedClass
+
+	-- Release the sphere after a brief delay
+	task.delay(0.35, function()
+		if root and root.Parent then
+			root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
+			root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+			root.Anchored = false
+			pcall(function() root:SetNetworkOwner(player) end)
+		end
+	end)
+
+	-- Fire SelectClass to the PaintingSystem via the RemoteEvent
+	-- On the server we simulate the client-fired event by directly invoking
+	-- PaintingSystem's handler through the SelectClass remote
+	-- Since we're the server, we fire it as if the client sent it
+	task.defer(function()
+		Remotes.SelectClass:FireClient(player, assignedClass) -- Tells client
+	end)
+
+	-- Tell the client to start the game (triggers HUD, controls, etc.)
+	Remotes.StartGameClient:FireClient(player, assignedClass)
+
+	print("[EcoSphere] MatchBootstrap: Spawned", player.DisplayName, "as", assignedClass)
+end
+
+-- Handle arriving players
+local arrivedPlayers = {}
+
+Players.PlayerAdded:Connect(function(player)
+	print("[EcoSphere] MatchBootstrap: Player arrived:", player.DisplayName)
+	table.insert(arrivedPlayers, player)
+
+	-- Get teleport data for this player
+	local joinData = player:GetJoinData()
+	if joinData and joinData.TeleportData then
+		teleportData = joinData.TeleportData
+	end
+
+	-- Determine this player's assigned class from teleport data
+	local assignedClass = nil
+	if teleportData and teleportData.classAssignments then
+		assignedClass = teleportData.classAssignments[tostring(player.UserId)]
+	end
+
+	-- Fallback: assign randomly if no teleport data
+	if not assignedClass then
+		assignedClass = classOptions[math.random(1, #classOptions)]
+		warn("[EcoSphere] MatchBootstrap: No teleport data for", player.DisplayName, "— assigned random class:", assignedClass)
+	end
+
+	-- Wait for character to load, then swap to sphere
+	player.CharacterAdded:Once(function(character)
+		task.wait(0.5) -- Let the character fully load
+		spawnAsSphere(player, assignedClass)
+	end)
+
+	-- If character already exists (unlikely but safe)
+	if player.Character then
+		task.wait(0.5)
+		spawnAsSphere(player, assignedClass)
+	end
+end)
+
+-- Handle players leaving mid-match
+Players.PlayerRemoving:Connect(function(player)
+	playerClasses[player] = nil
+
+	-- If all players leave, just let the server shut down naturally
+	if #Players:GetPlayers() <= 1 then
+		print("[EcoSphere] MatchBootstrap: Last player leaving, server will shut down")
+	end
+end)
+
+-- Return all players to lobby after match ends
+local function returnToLobby()
+	print("[EcoSphere] MatchBootstrap: Returning all players to lobby")
+
+	local playersToReturn = Players:GetPlayers()
+	if #playersToReturn == 0 then return end
+
+	-- Fire return event to clients (starts the countdown UI)
+	Remotes.ReturnToLobby:FireAllClients(GameConfig.RETURN_TO_LOBBY_DELAY)
+
+	task.wait(GameConfig.RETURN_TO_LOBBY_DELAY)
+
+	-- Get the lobby PlaceId from teleport data
+	local lobbyPlaceId = teleportData and teleportData.lobbyPlaceId
+
+	if not lobbyPlaceId then
+		-- Fallback: In Roblox multi-place experiences, the start place
+		-- can be determined from game.GameId, but the simplest approach
+		-- is to use the value sent in teleportData from the lobby.
+		-- If missing, we kick players so they rejoin the start place automatically.
+		warn("[EcoSphere] MatchBootstrap: No lobby PlaceId in teleport data, kicking to rejoin")
+		for _, player in ipairs(Players:GetPlayers()) do
+			player:Kick("Match ended! Rejoin to return to the lobby.")
+		end
+		return
+	end
+
+	-- Teleport all players back to the lobby
+	playersToReturn = Players:GetPlayers() -- Re-fetch in case someone left during countdown
+	if #playersToReturn == 0 then return end
+
+	local success, err = pcall(function()
+		TeleportService:Teleport(lobbyPlaceId, playersToReturn)
+	end)
+
+	if not success then
+		warn("[EcoSphere] MatchBootstrap: Failed to teleport back:", err)
+		for _, player in ipairs(Players:GetPlayers()) do
+			player:Kick("Match ended! Rejoin to return to the lobby.")
+		end
+	else
+		print("[EcoSphere] MatchBootstrap: Teleported", #playersToReturn, "players back to lobby")
+	end
+end
+
+-- Expose returnToLobby for GameManager via BindableEvent
+local returnEvent = Instance.new("BindableEvent")
+returnEvent.Name = "ReturnToLobby"
+returnEvent.Event:Connect(returnToLobby)
+returnEvent.Parent = script
+
+-- Timeout: if no players arrive, just log it (server will shut down naturally)
+task.delay(GameConfig.MATCH_LOAD_TIMEOUT, function()
+	if #arrivedPlayers == 0 then
+		warn("[EcoSphere] MatchBootstrap: No players arrived within timeout, server will shut down")
+	end
+end)
+
+print("[EcoSphere] MatchBootstrap initialized — waiting for players")
+]]></string>
+      </Properties>
+    </Item>
+    <Item class="Script" referent="23">
+      <Properties>
+        <string name="Name">PaintingSystem</string>
+        <token name="RunContext">0</token>
+        <string name="Source">-- PaintingSystem: Server-side paint trail and coverage tracking
+-- Only runs on match servers
+local Workspace = game:GetService("Workspace")
+local RS = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local GameConfig = require(RS:WaitForChild("GameConfig"))
+local Remotes = RS:WaitForChild("Remotes")
+
+-- Skip on lobby servers
+if game.PrivateServerId == "" or game.PrivateServerOwnerId ~= 0 then
+	print("[EcoSphere] PaintingSystem: Skipping — lobby server")
+	return
+end
+
+local paintFolder = Workspace:WaitForChild("PaintTrails")
+local planet = Workspace:WaitForChild("PlanetBase")
+
+-- Player class assignments
+local playerClasses = {} -- [player] = className
+local playerPowerups = {} -- [player] = endTime
+
+-- Coverage tracking via spherical grid
+-- Each cell in the grid stores the class that painted it
+local RES = GameConfig.GRID_RESOLUTION
+local coverageGrid = {} -- [thetaIndex][phiIndex] = className or nil
+for t = 1, RES do
+	coverageGrid[t] = {}
+end
+
+-- Convert world position to grid cell
+local function posToGrid(worldPos)
+	local dir = (worldPos - GameConfig.PLANET_CENTER).Unit
+	local theta = math.atan2(dir.Z, dir.X) + math.pi -- [0, 2pi]
+	local phi = math.acos(math.clamp(dir.Y, -1, 1))  -- [0, pi]
+
+	local tIdx = math.clamp(math.floor(theta / (2 * math.pi) * RES) + 1, 1, RES)
+	local pIdx = math.clamp(math.floor(phi / math.pi * RES) + 1, 1, RES)
+	return tIdx, pIdx
+end
+
+-- Calculate coverage percentages
+local function getCoverage()
+	local counts = { Economist = 0, Cultivator = 0, Advocate = 0 }
+	local totalCells = RES * RES
+
+	for t = 1, RES do
+		for p = 1, RES do
+			local cls = coverageGrid[t][p]
+			if cls and counts[cls] ~= nil then
+				counts[cls] = counts[cls] + 1
+			end
+		end
+	end
+
+	-- Each class has ~1/3 of the sphere as their target area
+	-- But we want any painting to count, so percentage is out of total
+	local targetCells = totalCells / 3
+	return {
+		Economist = math.min(counts.Economist / targetCells, 1),
+		Cultivator = math.min(counts.Cultivator / targetCells, 1),
+		Advocate = math.min(counts.Advocate / targetCells, 1),
+	}
+end
+
+-- Class selection
+local function spawnGrass(className, surfacePos, paintSize, upDir, rightDir, forwardDir)
+	if className ~= "Cultivator" then return end
+	local grassAsset = RS:FindFirstChild("Grass")
+	if not grassAsset then return end
+	
+	local numGrass = math.clamp(math.floor(paintSize / 1.5), 3, 15)
+	for i = 1, numGrass do
+		local g = grassAsset:Clone()
+		
+		local r = (math.random() * (paintSize/2 * 0.8))
+		local theta = math.random() * math.pi * 2
+		local offset = rightDir * (math.cos(theta) * r) + forwardDir * (math.sin(theta) * r)
+		
+		local p = surfacePos + offset
+		
+		local gUp = (p - GameConfig.PLANET_CENTER).Unit
+		local gRight = gUp:Cross(Vector3.new(0, 1, 0))
+		if gRight.Magnitude &lt; 0.001 then gRight = gUp:Cross(Vector3.new(1, 0, 0)) end
+		gRight = gRight.Unit
+		local gForward = gRight:Cross(gUp).Unit
+		
+		g.CFrame = CFrame.fromMatrix(p, gRight, gUp, -gForward) * CFrame.Angles(0, math.random() * math.pi * 2, 0)
+		
+		-- Shorter, wider scale for lushness instead of spikes
+		local sXZ = (math.random() * 0.8 + 1.4) * (paintSize / 12)
+		local sY = (math.random() * 0.3 + 0.6) * (paintSize / 12)
+		g.Size = Vector3.new(grassAsset.Size.X * sXZ, grassAsset.Size.Y * sY, grassAsset.Size.Z * sXZ)
+		g.Anchored = true
+		g.CanCollide = false
+		g.Parent = paintFolder
+		
+		-- Add gentle spore particles to the first grass mesh in the cluster
+		if i == 1 then
+			local pe = Instance.new("ParticleEmitter")
+			pe.Name = "SporeParticles"
+			pe.Texture = "rbxassetid://243664365"
+			pe.Color = ColorSequence.new(Color3.fromRGB(150, 255, 100))
+			pe.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.4), NumberSequenceKeypoint.new(1, 0)})
+			pe.Transparency = NumberSequence.new({NumberSequenceKeypoint.new(0, 1), NumberSequenceKeypoint.new(0.2, 0.5), NumberSequenceKeypoint.new(1, 1)})
+			pe.EmissionDirection = Enum.NormalId.Top
+			pe.Lifetime = NumberRange.new(3, 5)
+			pe.Rate = 3
+			pe.Speed = NumberRange.new(1, 2)
+			pe.VelocitySpread = 30
+			pe.Drag = 1
+			pe.Parent = g
+		end
+	end
+end
+
+Remotes.SelectClass.OnServerEvent:Connect(function(player, className)
+	if GameConfig.CLASSES[className] then
+		playerClasses[player] = className
+
+		-- Recolor the player's ball
+		local char = player.Character
+		if char then
+			local root = char:FindFirstChild("HumanoidRootPart")
+			if root then
+				local shell = char:FindFirstChild("VisualShell") or root
+				shell.Color = GameConfig.CLASSES[className].Color
+				shell.Material = Enum.Material.Glass
+				shell.Transparency = 0.5
+				
+				-- Set attribute for client visuals
+				char:SetAttribute("Class", className)
+				
+				-- Clean up old core
+				local oldCore = char:FindFirstChild("CoreModel")
+				if oldCore then oldCore:Destroy() end
+
+				-- Create core model
+				local coreModel = Instance.new("Model")
+				coreModel.Name = "CoreModel"
+				coreModel.Parent = char
+
+				local classColor = GameConfig.CLASSES[className].Color
+
+				if className == "Economist" then
+					-- Spinning golden Diamond
+					local coreBase = Instance.new("Part")
+					coreBase.Name = "CoreBase"
+					coreBase.Size = Vector3.new(2.5, 2.5, 2.5)
+					coreBase.Color = classColor
+					coreBase.Material = Enum.Material.Metal
+					coreBase.CanCollide = false
+					coreBase.Massless = true
+					
+					local mesh = Instance.new("SpecialMesh")
+					mesh.MeshType = Enum.MeshType.FileMesh
+					mesh.MeshId = "rbxassetid://97564601"
+					mesh.Scale = Vector3.new(1.8, 1.8, 1.8)
+					mesh.Parent = coreBase
+					
+					coreBase.Parent = coreModel
+
+					local weld = Instance.new("Weld")
+					weld.Name = "CoreWeld"
+					weld.Part0 = root
+					weld.Part1 = coreBase
+					weld.C0 = CFrame.new(0, 0, 0)
+					weld.C1 = CFrame.new(0, 0, 0)
+					weld.Parent = coreBase
+
+				elseif className == "Cultivator" then
+					-- Glowing green Cylinder (seed)
+					local coreBase = Instance.new("Part")
+					coreBase.Name = "CoreBase"
+					coreBase.Shape = Enum.PartType.Cylinder
+					coreBase.Size = Vector3.new(2.2, 1.6, 1.6)
+					coreBase.Color = classColor
+					coreBase.Material = Enum.Material.Neon
+					coreBase.CanCollide = false
+					coreBase.Massless = true
+					coreBase.Parent = coreModel
+
+					local weld = Instance.new("Weld")
+					weld.Name = "CoreWeld"
+					weld.Part0 = root
+					weld.Part1 = coreBase
+					weld.C0 = CFrame.Angles(0, 0, math.rad(90))
+					weld.C1 = CFrame.new(0, 0, 0)
+					weld.Parent = coreBase
+
+				elseif className == "Advocate" then
+					-- Pulsating magenta Sphere + Intersecting Rings
+					local coreBase = Instance.new("Part")
+					coreBase.Name = "CoreBase"
+					coreBase.Shape = Enum.PartType.Ball
+					coreBase.Size = Vector3.new(1.5, 1.5, 1.5)
+					coreBase.Color = classColor
+					coreBase.Material = Enum.Material.Neon
+					coreBase.CanCollide = false
+					coreBase.Massless = true
+					coreBase.Parent = coreModel
+
+					local weld = Instance.new("Weld")
+					weld.Name = "CoreWeld"
+					weld.Part0 = root
+					weld.Part1 = coreBase
+					weld.C0 = CFrame.new(0, 0, 0)
+					weld.C1 = CFrame.new(0, 0, 0)
+					weld.Parent = coreBase
+
+					-- Intersecting Ring 1
+					local ring1 = Instance.new("Part")
+					ring1.Name = "Ring1"
+					ring1.Shape = Enum.PartType.Cylinder
+					ring1.Size = Vector3.new(0.35, 2.6, 2.6)
+					ring1.Color = classColor
+					ring1.Material = Enum.Material.Neon
+					ring1.CanCollide = false
+					ring1.Massless = true
+					ring1.Parent = coreModel
+
+					local w1 = Instance.new("WeldConstraint")
+					w1.Part0 = coreBase
+					w1.Part1 = ring1
+					ring1.CFrame = coreBase.CFrame * CFrame.Angles(math.rad(45), 0, 0)
+					w1.Parent = ring1
+
+					-- Intersecting Ring 2
+					local ring2 = Instance.new("Part")
+					ring2.Name = "Ring2"
+					ring2.Shape = Enum.PartType.Cylinder
+					ring2.Size = Vector3.new(0.35, 2.6, 2.6)
+					ring2.Color = classColor
+					ring2.Material = Enum.Material.Neon
+					ring2.CanCollide = false
+					ring2.Massless = true
+					ring2.Parent = coreModel
+
+					local w2 = Instance.new("WeldConstraint")
+					w2.Part0 = coreBase
+					w2.Part1 = ring2
+					ring2.CFrame = coreBase.CFrame * CFrame.Angles(math.rad(-45), 0, 0)
+					w2.Parent = ring2
+				end
+			end
+		end
+		print("[EcoSphere]", player.DisplayName, "selected class:", className)
+	end
+end)
+
+-- Paint trail request
+Remotes.PaintTrail.OnServerEvent:Connect(function(player, position, normal)
+	local className = playerClasses[player]
+	if not className then return end
+
+	local classData = GameConfig.CLASSES[className]
+	if not classData then return end
+
+	-- Check if player has powerup active
+	local paintSize = classData.PaintSize or 8
+	local powerupEnd = player:GetAttribute("PowerupEndTime")
+	if powerupEnd and tick() &lt; powerupEnd then
+		paintSize = GameConfig.PAINT_SIZE_POWERUP
+	end
+	
+	-- Architect's Surge perk
+	local char = player.Character
+	if char and char:GetAttribute("ArchitectSurge") then
+		paintSize = paintSize * 3
+	end
+
+	-- Validate position is near planet surface
+	local dist = (position - GameConfig.PLANET_CENTER).Magnitude
+	if dist &gt; GameConfig.PLANET_RADIUS + 20 then
+		-- Painting on debris - still allow but don't track coverage
+		local paintPart = Instance.new("Part")
+		paintPart.Name = "DebrisPaint"
+		paintPart.Size = Vector3.new(paintSize, 0.3, paintSize)
+		if className == "Economist" then
+			paintPart.Material = Enum.Material.Metal
+			paintPart.Color = classData.Color
+			paintPart.Transparency = 0
+		elseif className == "Cultivator" then
+			paintPart.Material = Enum.Material.Grass
+			paintPart.Color = classData.Color
+			paintPart.Transparency = 0
+		else
+			paintPart.Material = Enum.Material.Neon
+			paintPart.Color = classData.Color
+			paintPart.Transparency = 0.1
+		end
+		paintPart.Anchored = true
+		paintPart.CanCollide = false
+		paintPart.CFrame = CFrame.new(position, position + normal)
+		paintPart.TopSurface = Enum.SurfaceType.Smooth
+		paintPart.BottomSurface = Enum.SurfaceType.Smooth
+		paintPart.Parent = paintFolder
+		
+		local up = (position - GameConfig.PLANET_CENTER).Unit
+		local right = up:Cross(Vector3.new(0, 1, 0))
+		if right.Magnitude &lt; 0.001 then right = up:Cross(Vector3.new(1, 0, 0)) end
+		right = right.Unit
+		local forward = right:Cross(up).Unit
+		
+		spawnGrass(className, position, paintSize, up, right, forward)
+		return
+	end
+
+	-- Snap position to planet surface
+	local dirFromCenter = (position - GameConfig.PLANET_CENTER).Unit
+	local surfacePos = GameConfig.PLANET_CENTER + dirFromCenter * (GameConfig.PLANET_RADIUS + 0.45)
+
+	-- Update coverage grid
+	local tIdx, pIdx = posToGrid(surfacePos)
+	coverageGrid[tIdx][pIdx] = className
+
+	-- Also mark nearby cells for larger paint
+	if paintSize &gt; GameConfig.PAINT_SIZE_DEFAULT then
+		for dt = -1, 1 do
+			for dp = -1, 1 do
+				local nt = math.clamp(tIdx + dt, 1, RES)
+				local np = math.clamp(pIdx + dp, 1, RES)
+				coverageGrid[nt][np] = className
+			end
+		end
+	end
+
+	-- Create paint visual on planet surface
+	local paintPart = Instance.new("Part")
+	paintPart.Name = "Paint_" .. className
+	paintPart.Shape = Enum.PartType.Cylinder
+	paintPart.Size = Vector3.new(0.3, paintSize, paintSize)
+	if className == "Economist" then
+		paintPart.Material = Enum.Material.Metal
+		paintPart.Color = classData.Color
+		paintPart.Transparency = 0
+	elseif className == "Cultivator" then
+		paintPart.Material = Enum.Material.Grass
+		paintPart.Color = classData.Color
+		paintPart.Transparency = 1 -- Hide the base paint for the Cultivator
+	else
+		paintPart.Material = Enum.Material.Neon
+		paintPart.Color = classData.Color
+		paintPart.Transparency = 0.1
+	end
+	paintPart.Anchored = true
+	paintPart.CanCollide = false
+	paintPart.TopSurface = Enum.SurfaceType.Smooth
+	paintPart.BottomSurface = Enum.SurfaceType.Smooth
+
+	-- Orient flat against the sphere surface
+	local up = dirFromCenter
+	local right = up:Cross(Vector3.new(0, 1, 0))
+	if right.Magnitude &lt; 0.001 then
+		right = up:Cross(Vector3.new(1, 0, 0))
+	end
+	right = right.Unit
+	local forward = right:Cross(up).Unit
+
+	paintPart.CFrame = CFrame.fromMatrix(surfacePos, up, forward)
+	paintPart.Parent = paintFolder
+	
+	spawnGrass(className, surfacePos, paintSize, up, right, forward)
+end)
+
+Players.PlayerRemoving:Connect(function(player)
+	playerClasses[player] = nil
+end)
+
+-- Broadcast coverage updates periodically
+task.spawn(function()
+	while true do
+		task.wait(0.5)
+		local coverage = getCoverage()
+		Remotes.UpdateProgress:FireAllClients(coverage)
+	end
+end)
+
+-- Cleanup on player leave
+Players.PlayerRemoving:Connect(function(player)
+	playerClasses[player] = nil
+	playerPowerups[player] = nil
+end)
+
+-- Expose coverage for GameManager
+local module = {}
+module.getCoverage = getCoverage
+module.coverageGrid = coverageGrid
+module.playerClasses = playerClasses
+
+-- Store reference for GameManager
+local coverageValue = Instance.new("BindableFunction")
+coverageValue.Name = "GetCoverage"
+coverageValue.OnInvoke = function()
+	return getCoverage()
+end
+coverageValue.Parent = script
+
+-- Grayscale function for fail state
+local drainEvent = Instance.new("BindableEvent")
+drainEvent.Name = "DrainPaint"
+drainEvent.Event:Connect(function()
+	for _, paintPart in ipairs(paintFolder:GetChildren()) do
+		paintPart.Color = Color3.fromRGB(80, 80, 80)
+		paintPart.Material = Enum.Material.SmoothPlastic
+	end
+end)
+drainEvent.Parent = script
+
+print("[EcoSphere] PaintingSystem initialized")</string>
+      </Properties>
+    </Item>
+  </Item>
+  <Item class="SoundService" referent="24">
+    <Properties>
+      <string name="Name">SoundService</string>
+      <bool name="RespectFilteringEnabled">true</bool>
+    </Properties>
+  </Item>
+  <Item class="StarterPlayer" referent="25">
+    <Properties>
+      <string name="Name">StarterPlayer</string>
+    </Properties>
+    <Item class="StarterPlayerScripts" referent="26">
+      <Properties>
+        <string name="Name">StarterPlayerScripts</string>
+      </Properties>
+      <Item class="LocalScript" referent="27">
+        <Properties>
+          <string name="Name">CoinClient</string>
+          <string name="Source"><![CDATA[-- CoinClient: Client-side coin collection feedback
+local Players = game:GetService("Players")
+local RS = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local GameConfig = require(RS:WaitForChild("GameConfig"))
+local Remotes = RS:WaitForChild("Remotes")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Create screen GUI for coin collect flash
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "CoinFXGui"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.Parent = playerGui
+
+-- Coin collect notification (geometric, no pouch)
+local collectLabel = Instance.new("TextLabel")
+collectLabel.Name = "CoinCollectLabel"
+collectLabel.AnchorPoint = Vector2.new(0.5, 0.5)
+collectLabel.Position = UDim2.new(0.5, 0, 0.35, 0)
+collectLabel.Size = UDim2.new(0, 300, 0, 60)
+collectLabel.BackgroundTransparency = 1
+collectLabel.Text = ""
+collectLabel.TextColor3 = GameConfig.COIN_COLOR
+collectLabel.TextSize = 28
+collectLabel.Font = Enum.Font.GothamBold
+collectLabel.TextTransparency = 1
+collectLabel.Parent = screenGui
+
+-- Geometric diamond indicator (not a pouch)
+local diamond = Instance.new("Frame")
+diamond.Name = "Diamond"
+diamond.AnchorPoint = Vector2.new(0.5, 0.5)
+diamond.Position = UDim2.new(0.5, 0, 0.28, 0)
+diamond.Size = UDim2.new(0, 30, 0, 30)
+diamond.Rotation = 45
+diamond.BackgroundColor3 = GameConfig.COIN_COLOR
+diamond.BackgroundTransparency = 1
+diamond.BorderSizePixel = 0
+diamond.Parent = screenGui
+
+local diamondCorner = Instance.new("UICorner")
+diamondCorner.CornerRadius = UDim.new(0, 4)
+diamondCorner.Parent = diamond
+
+Remotes.CoinCollected.OnClientEvent:Connect(function()
+	-- Flash the geometric diamond + text
+	collectLabel.Text = "⚡ PAINT BOOST!"
+	collectLabel.TextTransparency = 0
+	collectLabel.TextSize = 28
+	diamond.BackgroundTransparency = 0
+	diamond.Size = UDim2.new(0, 10, 0, 10)
+
+	-- Spring pop
+	TweenService:Create(diamond, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+		Size = UDim2.new(0, 40, 0, 40),
+	}):Play()
+
+	TweenService:Create(collectLabel, TweenInfo.new(0.3, Enum.EasingStyle.Back), {
+		TextSize = 34,
+	}):Play()
+
+	task.wait(1.2)
+
+	-- Fade out
+	TweenService:Create(collectLabel, TweenInfo.new(0.5), {
+		TextTransparency = 1
+	}):Play()
+	TweenService:Create(diamond, TweenInfo.new(0.5), {
+		BackgroundTransparency = 1
+	}):Play()
+end)
+
+print("[EcoSphere] CoinClient initialized")
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="LocalScript" referent="28">
+        <Properties>
+          <string name="Name">GameHUD</string>
+          <string name="Source">-- GameHUD: Flat Design 2.0 progress bars, timer, and game state display
+local Players = game:GetService("Players")
+local RS = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local GameConfig = require(RS:WaitForChild("GameConfig"))
+local Remotes = RS:WaitForChild("Remotes")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- ============================================================
+-- BUILD HUD
+-- ============================================================
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "GameHUD"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Enabled = false -- Hide HUD in the lobby initially
+screenGui.Parent = playerGui
+
+-- ========================
+-- TIMER DISPLAY (top center)
+-- ========================
+local timerFrame = Instance.new("Frame")
+timerFrame.Name = "TimerFrame"
+timerFrame.AnchorPoint = Vector2.new(0.5, 0)
+timerFrame.Position = UDim2.new(0.5, 0, 0, 20)
+timerFrame.Size = UDim2.new(0, 180, 0, 60)
+timerFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
+timerFrame.BackgroundTransparency = 0.1
+timerFrame.BorderSizePixel = 0
+timerFrame.Parent = screenGui
+
+local timerCorner = Instance.new("UICorner")
+timerCorner.CornerRadius = UDim.new(0, 16)
+timerCorner.Parent = timerFrame
+
+local timerStroke = Instance.new("UIStroke")
+timerStroke.Color = GameConfig.Palette.PaleTeal
+timerStroke.Thickness = 2
+timerStroke.Parent = timerFrame
+
+local timerLabel = Instance.new("TextLabel")
+timerLabel.Name = "TimerLabel"
+timerLabel.Size = UDim2.new(1, 0, 0, 18)
+timerLabel.Position = UDim2.new(0, 0, 0, 6)
+timerLabel.BackgroundTransparency = 1
+timerLabel.Text = "TIME REMAINING"
+timerLabel.TextColor3 = GameConfig.Palette.Cream
+timerLabel.TextSize = 11
+timerLabel.Font = Enum.Font.Nunito
+timerLabel.Parent = timerFrame
+
+local timerValue = Instance.new("TextLabel")
+timerValue.Name = "TimerValue"
+timerValue.Size = UDim2.new(1, 0, 0, 32)
+timerValue.Position = UDim2.new(0, 0, 0, 24)
+timerValue.BackgroundTransparency = 1
+timerValue.Text = "1:00"
+timerValue.TextColor3 = Color3.fromRGB(255, 255, 255)
+timerValue.TextSize = 28
+timerValue.Font = Enum.Font.Nunito
+timerValue.Parent = timerFrame
+
+-- ========================
+-- PROGRESS BARS (bottom center)
+-- ========================
+local progressFrame = Instance.new("Frame")
+progressFrame.Name = "ProgressFrame"
+progressFrame.AnchorPoint = Vector2.new(0.5, 1)
+progressFrame.Position = UDim2.new(0.5, 0, 1, -25)
+progressFrame.Size = UDim2.new(0, 600, 0, 130)
+progressFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
+progressFrame.BackgroundTransparency = 0.1
+progressFrame.BorderSizePixel = 0
+progressFrame.Parent = screenGui
+
+local progCorner = Instance.new("UICorner")
+progCorner.CornerRadius = UDim.new(0, 18)
+progCorner.Parent = progressFrame
+
+local progStroke = Instance.new("UIStroke")
+progStroke.Color = GameConfig.Palette.PaleTeal
+progStroke.Thickness = 2
+progStroke.Parent = progressFrame
+
+-- Title
+local progTitle = Instance.new("TextLabel")
+progTitle.Size = UDim2.new(1, 0, 0, 25)
+progTitle.Position = UDim2.new(0, 0, 0, 8)
+progTitle.BackgroundTransparency = 1
+progTitle.Text = "ECOSPHERE HARMONY"
+progTitle.TextColor3 = GameConfig.Palette.Cream
+progTitle.TextSize = 13
+progTitle.Font = Enum.Font.Nunito
+progTitle.Parent = progressFrame
+
+-- Build individual progress bars
+local classOrder = {"Economist", "Cultivator", "Advocate"}
+local barFills = {}
+local barLabels = {}
+local barPcts = {}
+
+for i, className in ipairs(classOrder) do
+	local classData = GameConfig.CLASSES[className]
+	local yOffset = 35 + (i - 1) * 30
+
+	-- Class label
+	local label = Instance.new("TextLabel")
+	label.Name = className .. "Label"
+	label.Size = UDim2.new(0, 120, 0, 24)
+	label.Position = UDim2.new(0, 15, 0, yOffset)
+	label.BackgroundTransparency = 1
+	label.Text = classData.DisplayName
+	label.TextColor3 = classData.Color
+	label.TextSize = 13
+	label.Font = Enum.Font.Nunito
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = progressFrame
+	barLabels[className] = label
+
+	-- Bar background (translucent teal glassmorphism track)
+	local barBg = Instance.new("Frame")
+	barBg.Name = className .. "BarBg"
+	barBg.Size = UDim2.new(0, 370, 0, 20)
+	barBg.Position = UDim2.new(0, 140, 0, yOffset + 2)
+	barBg.BackgroundColor3 = GameConfig.Palette.PaleTeal
+	barBg.BackgroundTransparency = 0.8
+	barBg.BorderSizePixel = 0
+	barBg.Parent = progressFrame
+
+	local barBgCorner = Instance.new("UICorner")
+	barBgCorner.CornerRadius = UDim.new(0, 10)
+	barBgCorner.Parent = barBg
+
+	-- Bar fill (chunky, springy)
+	local barFill = Instance.new("Frame")
+	barFill.Name = "Fill"
+	barFill.Size = UDim2.new(0, 0, 1, 0)
+	barFill.BackgroundColor3 = classData.Color
+	barFill.BorderSizePixel = 0
+	barFill.Parent = barBg
+
+	local fillCorner = Instance.new("UICorner")
+	fillCorner.CornerRadius = UDim.new(0, 10)
+	fillCorner.Parent = barFill
+
+	-- 80% threshold marker
+	local threshold = Instance.new("Frame")
+	threshold.Name = "Threshold"
+	threshold.Size = UDim2.new(0, 2, 1, 4)
+	threshold.Position = UDim2.new(0.8, 0, 0, -2)
+	threshold.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+	threshold.BackgroundTransparency = 0.4
+	threshold.BorderSizePixel = 0
+	threshold.Parent = barBg
+
+	-- Percentage text
+	local pctLabel = Instance.new("TextLabel")
+	pctLabel.Name = className .. "Pct"
+	pctLabel.Size = UDim2.new(0, 55, 0, 24)
+	pctLabel.Position = UDim2.new(0, 520, 0, yOffset)
+	pctLabel.BackgroundTransparency = 1
+	pctLabel.Text = "0%"
+	pctLabel.TextColor3 = classData.Color
+	pctLabel.TextSize = 14
+	pctLabel.Font = Enum.Font.Nunito
+	pctLabel.TextXAlignment = Enum.TextXAlignment.Right
+	pctLabel.Parent = progressFrame
+
+	barFills[className] = barFill
+	barPcts[className] = pctLabel
+end
+
+-- ========================
+-- POWERUP INDICATOR (top right)
+-- ========================
+local powerupFrame = Instance.new("Frame")
+powerupFrame.Name = "PowerupFrame"
+powerupFrame.AnchorPoint = Vector2.new(1, 0)
+powerupFrame.Position = UDim2.new(1, -20, 0, 20)
+powerupFrame.Size = UDim2.new(0, 200, 0, 45)
+powerupFrame.BackgroundColor3 = GameConfig.COIN_COLOR
+powerupFrame.BackgroundTransparency = 1
+powerupFrame.BorderSizePixel = 0
+powerupFrame.Visible = false
+powerupFrame.Parent = screenGui
+
+local puCorner = Instance.new("UICorner")
+puCorner.CornerRadius = UDim.new(0, 12)
+puCorner.Parent = powerupFrame
+
+local puLabel = Instance.new("TextLabel")
+puLabel.Size = UDim2.new(1, 0, 1, 0)
+puLabel.BackgroundTransparency = 1
+puLabel.Text = "⚡ WIDE PAINT ACTIVE"
+puLabel.TextColor3 = Color3.fromRGB(20, 20, 30)
+puLabel.TextSize = 16
+puLabel.Font = Enum.Font.Nunito
+puLabel.Parent = powerupFrame
+
+-- ========================
+-- GAME STATE OVERLAY (win/lose)
+-- ========================
+local stateOverlay = Instance.new("Frame")
+stateOverlay.Name = "StateOverlay"
+stateOverlay.Size = UDim2.new(1, 0, 1, 0)
+stateOverlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+stateOverlay.BackgroundTransparency = 1
+stateOverlay.BorderSizePixel = 0
+stateOverlay.Visible = false
+stateOverlay.ZIndex = 10
+stateOverlay.Parent = screenGui
+
+local stateText = Instance.new("TextLabel")
+stateText.Name = "StateText"
+stateText.AnchorPoint = Vector2.new(0.5, 0.5)
+stateText.Position = UDim2.new(0.5, 0, 0.4, 0)
+stateText.Size = UDim2.new(0, 600, 0, 100)
+stateText.BackgroundTransparency = 1
+stateText.TextColor3 = Color3.fromRGB(255, 255, 255)
+stateText.TextSize = 52
+stateText.Font = Enum.Font.Nunito
+stateText.TextWrapped = true
+stateText.ZIndex = 11
+stateText.Parent = stateOverlay
+
+local stateSubtext = Instance.new("TextLabel")
+stateSubtext.Name = "StateSubtext"
+stateSubtext.AnchorPoint = Vector2.new(0.5, 0)
+stateSubtext.Position = UDim2.new(0.5, 0, 0.55, 0)
+stateSubtext.Size = UDim2.new(0, 500, 0, 40)
+stateSubtext.BackgroundTransparency = 1
+stateSubtext.TextColor3 = GameConfig.Palette.Cream
+stateSubtext.TextSize = 20
+stateSubtext.Font = Enum.Font.Nunito
+stateSubtext.ZIndex = 11
+stateSubtext.Parent = stateOverlay
+
+-- ========================
+-- CLASS SWITCHER UI (bottom left)
+-- ========================
+local switchFrame = Instance.new("Frame")
+switchFrame.Name = "SwitchFrame"
+switchFrame.AnchorPoint = Vector2.new(0, 1)
+switchFrame.Position = UDim2.new(0, 20, 1, -20)
+switchFrame.Size = UDim2.new(0, 220, 0, 85)
+switchFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
+switchFrame.BackgroundTransparency = 0.1
+switchFrame.BorderSizePixel = 0
+switchFrame.Parent = screenGui
+
+local switchCorner = Instance.new("UICorner")
+switchCorner.CornerRadius = UDim.new(0, 16)
+switchCorner.Parent = switchFrame
+
+local switchStroke = Instance.new("UIStroke")
+switchStroke.Color = GameConfig.Palette.PaleTeal
+switchStroke.Thickness = 2
+switchStroke.Parent = switchFrame
+
+local switchTitle = Instance.new("TextLabel")
+switchTitle.Size = UDim2.new(1, 0, 0, 20)
+switchTitle.Position = UDim2.new(0, 0, 0, 8)
+switchTitle.BackgroundTransparency = 1
+switchTitle.Text = "SWITCH CLASS"
+switchTitle.TextColor3 = GameConfig.Palette.Cream
+switchTitle.TextSize = 12
+switchTitle.Font = Enum.Font.Nunito
+switchTitle.Parent = switchFrame
+
+local switchContainer = Instance.new("Frame")
+switchContainer.Size = UDim2.new(1, 0, 0, 40)
+switchContainer.Position = UDim2.new(0, 0, 0, 32)
+switchContainer.BackgroundTransparency = 1
+switchContainer.Parent = switchFrame
+
+local switchLayout = Instance.new("UIListLayout")
+switchLayout.FillDirection = Enum.FillDirection.Horizontal
+switchLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+switchLayout.Padding = UDim.new(0, 15)
+switchLayout.Parent = switchContainer
+
+local function createSwitchBtn(className, hotkey)
+	local classData = GameConfig.CLASSES[className]
+	local btn = Instance.new("TextButton")
+	btn.Name = className .. "Btn"
+	btn.Size = UDim2.new(0, 40, 0, 40)
+	btn.BackgroundColor3 = classData.Color
+	btn.Text = classData.Icon
+	btn.TextSize = 20
+	btn.Font = Enum.Font.Nunito
+	btn.Parent = switchContainer
+	
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(1, 0)
+	btnCorner.Parent = btn
+	
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(1, 0, 0, 15)
+	label.Position = UDim2.new(0, 0, 1, 2)
+	label.BackgroundTransparency = 1
+	label.Text = "[" .. hotkey .. "]"
+	label.TextColor3 = GameConfig.Palette.Cream
+	label.TextSize = 12
+	label.Font = Enum.Font.Nunito
+	label.Parent = btn
+	
+	btn.MouseButton1Click:Connect(function()
+		if not _G.ClassSelected then return end
+		
+		-- In case PlanetaryMovement hotkeys are also firing, this is specifically for mouse clicks!
+		Remotes.SelectClass:FireServer(className)
+		
+		-- Simple click animation
+		local ts = game:GetService("TweenService")
+		ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 35, 0, 35)}):Play()
+		task.wait(0.1)
+		ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 40, 0, 40)}):Play()
+	end)
+end
+
+createSwitchBtn("Economist", "1")
+createSwitchBtn("Cultivator", "2")
+createSwitchBtn("Advocate", "3")
+
+-- ============================================================
+-- EVENT HANDLING
+-- ============================================================
+
+-- Update progress bars
+Remotes.UpdateProgress.OnClientEvent:Connect(function(coverage)
+	for className, pct in pairs(coverage) do
+		if barFills[className] then
+			local targetWidth = math.clamp(pct, 0, 1)
+			-- Springy tween for chunky feel
+			TweenService:Create(barFills[className], TweenInfo.new(0.4, Enum.EasingStyle.Back), {
+				Size = UDim2.new(targetWidth, 0, 1, 0)
+			}):Play()
+
+			barPcts[className].Text = math.floor(pct * 100) .. "%"
+
+			-- Color flash when crossing 80% (using LimeGreen from brand)
+			if pct &gt;= 0.8 then
+				barPcts[className].TextColor3 = GameConfig.Palette.LimeGreen
+			end
+		end
+	end
+end)
+
+-- Timer updates
+Remotes.GameStateChanged.OnClientEvent:Connect(function(state, timeLeft)
+	if state == "timer" then
+		local mins = math.floor(timeLeft / 60)
+		local secs = math.floor(timeLeft % 60)
+		timerValue.Text = string.format("%d:%02d", mins, secs)
+
+		-- Urgency color (using brand colors)
+		if timeLeft &lt;= 30 then
+			timerValue.TextColor3 = GameConfig.Palette.CoralPink
+			-- Pulse effect
+			TweenService:Create(timerValue, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, true), {
+				TextSize = 34
+			}):Play()
+		elseif timeLeft &lt;= 60 then
+			timerValue.TextColor3 = GameConfig.Palette.SoftGold
+		else
+			timerValue.TextColor3 = Color3.fromRGB(255, 255, 255)
+		end
+
+	elseif state == "playing" then
+		timerValue.Text = "1:00"
+
+	elseif state == "victory" then
+		stateOverlay.Visible = true
+		TweenService:Create(stateOverlay, TweenInfo.new(0.8), {BackgroundTransparency = 0.3}):Play()
+		stateText.Text = "✨ HARMONY ACHIEVED! ✨"
+		stateText.TextColor3 = GameConfig.Palette.LimeGreen
+		if timeLeft and timeLeft &gt; 0 then
+			stateSubtext.Text = "With " .. math.floor(timeLeft) .. " seconds to spare!"
+		else
+			stateSubtext.Text = "The EcoSphere is in perfect balance."
+		end
+
+	elseif state == "defeat" then
+		stateOverlay.Visible = true
+		TweenService:Create(stateOverlay, TweenInfo.new(1.5), {BackgroundTransparency = 0.4}):Play()
+		stateText.Text = "ECOSYSTEM COLLAPSED"
+		stateText.TextColor3 = GameConfig.Palette.CoralPink
+		stateSubtext.Text = "The balance was not maintained..."
+	end
+end)
+
+-- Powerup indicator
+local currentPowerupId = 0
+Remotes.PowerupActivated.OnClientEvent:Connect(function(duration)
+	currentPowerupId = currentPowerupId + 1
+	local thisPowerupId = currentPowerupId
+
+	powerupFrame.Visible = true
+	powerupFrame.BackgroundTransparency = 0
+	
+	-- Pop in animation
+	TweenService:Create(powerupFrame, TweenInfo.new(0.2, Enum.EasingStyle.Back), {
+		Position = UDim2.new(1, -20, 0, 80)
+	}):Play()
+	
+	task.spawn(function()
+		-- Flashing effect
+		for i = 1, math.floor(duration * 2) do
+			if currentPowerupId ~= thisPowerupId then return end
+			powerupFrame.BackgroundTransparency = 0.5
+			task.wait(0.25)
+			if currentPowerupId ~= thisPowerupId then return end
+			powerupFrame.BackgroundTransparency = 0
+			task.wait(0.25)
+		end
+		
+		if currentPowerupId ~= thisPowerupId then return end
+		-- Fade out
+		TweenService:Create(powerupFrame, TweenInfo.new(0.3), {
+			Position = UDim2.new(1, -20, 0, 20),
+			BackgroundTransparency = 1
+		}):Play()
+		task.wait(0.3)
+		
+		if currentPowerupId == thisPowerupId then
+			powerupFrame.Visible = false
+			powerupFrame.Size = UDim2.new(0, 200, 0, 45)
+		end
+	end)
+end)
+
+Remotes:WaitForChild("StartGameClient").OnClientEvent:Connect(function()
+	screenGui.Enabled = true
+end)
+
+-- ========================
+-- BOOST HUD (bottom center)
+-- ========================
+local boostBg = Instance.new("Frame")
+boostBg.Name = "BoostBg"
+boostBg.AnchorPoint = Vector2.new(0.5, 1)
+boostBg.Position = UDim2.new(0.5, 0, 1, -25)
+boostBg.Size = UDim2.new(0, 180, 0, 8)
+boostBg.BackgroundColor3 = GameConfig.Palette.DarkTeal
+boostBg.BackgroundTransparency = 0.5
+boostBg.BorderSizePixel = 0
+boostBg.Parent = screenGui
+
+local bgCorner = Instance.new("UICorner")
+bgCorner.CornerRadius = UDim.new(1, 0)
+bgCorner.Parent = boostBg
+
+local boostFill = Instance.new("Frame")
+boostFill.Name = "BoostFill"
+boostFill.Size = UDim2.new(1, 0, 1, 0)
+boostFill.BackgroundColor3 = GameConfig.Palette.SoftBlue
+boostFill.BorderSizePixel = 0
+boostFill.Parent = boostBg
+
+local fillCorner = Instance.new("UICorner")
+fillCorner.CornerRadius = UDim.new(1, 0)
+fillCorner.Parent = boostFill
+
+local boostText = Instance.new("TextLabel")
+boostText.Name = "BoostText"
+boostText.AnchorPoint = Vector2.new(0.5, 1)
+boostText.Position = UDim2.new(0.5, 0, 0, -4)
+boostText.Size = UDim2.new(1, 0, 0, 20)
+boostText.BackgroundTransparency = 1
+boostText.Text = "SHIFT TO BOOST"
+boostText.TextColor3 = Color3.new(1,1,1)
+boostText.Font = Enum.Font.Nunito
+boostText.TextSize = 12
+boostText.Parent = boostBg
+
+RunService.RenderStepped:Connect(function()
+	local player = Players.LocalPlayer
+	local cd = player and player:GetAttribute("BoostCooldown") or 0
+	local now = tick()
+	if now &lt; cd then
+		local remaining = cd - now
+		local pct = 1 - (remaining / 6) -- 6 is the total cooldown
+		boostFill.Size = UDim2.new(math.clamp(pct, 0, 1), 0, 1, 0)
+		boostFill.BackgroundColor3 = Color3.fromRGB(150, 150, 150)
+		boostText.Text = string.format("RECHARGING: %.1f", remaining)
+	else
+		boostFill.Size = UDim2.new(1, 0, 1, 0)
+		boostFill.BackgroundColor3 = GameConfig.Palette.SoftBlue
+		boostText.Text = "SHIFT TO BOOST"
+	end
+end)
+
+-- ========================
+-- RETURN TO LOBBY (after match ends)
+-- ========================
+local returnLabel = Instance.new("TextLabel")
+returnLabel.Name = "ReturnLabel"
+returnLabel.AnchorPoint = Vector2.new(0.5, 0)
+returnLabel.Position = UDim2.new(0.5, 0, 0.65, 0)
+returnLabel.Size = UDim2.new(0, 400, 0, 30)
+returnLabel.BackgroundTransparency = 1
+returnLabel.TextColor3 = GameConfig.Palette.Cream
+returnLabel.TextSize = 16
+returnLabel.Font = Enum.Font.Nunito
+returnLabel.Text = ""
+returnLabel.Visible = false
+returnLabel.ZIndex = 12
+returnLabel.Parent = stateOverlay
+
+Remotes:WaitForChild("ReturnToLobby").OnClientEvent:Connect(function(delay)
+	if not delay then delay = 10 end
+	returnLabel.Visible = true
+
+	task.spawn(function()
+		local remaining = delay
+		while remaining &gt; 0 do
+			returnLabel.Text = "Returning to Lobby in " .. math.ceil(remaining) .. "..."
+			task.wait(0.5)
+			remaining = remaining - 0.5
+		end
+		returnLabel.Text = "Teleporting..."
+	end)
+end)
+
+print("[EcoSphere] GameHUD initialized")</string>
+        </Properties>
+      </Item>
+      <Item class="LocalScript" referent="29">
+        <Properties>
+          <string name="Name">LobbyHUD</string>
+          <string name="Source"><![CDATA[-- LobbyHUD: Client-side lobby queue UI with countdown and pad status
+-- Shows when player is near/on a pad, hidden otherwise
+local Players = game:GetService("Players")
+local RS = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local GameConfig = require(RS:WaitForChild("GameConfig"))
+local Remotes = RS:WaitForChild("Remotes")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Skip on match servers (sphere characters don't need lobby HUD)
+-- We detect this by checking if PlanetGravity exists on the character,
+-- or use a simpler flag: match servers are reserved servers
+-- Since we can't easily check PrivateServerId on client, we'll use a state flag
+local isInLobby = true
+
+-- ============================================================
+-- BUILD LOBBY HUD
+-- ============================================================
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "LobbyHUD"
+screenGui.ResetOnSpawn = false
+screenGui.IgnoreGuiInset = true
+screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+screenGui.Parent = playerGui
+
+-- ========================
+-- QUEUE STATUS PANEL (bottom center)
+-- ========================
+local queueFrame = Instance.new("Frame")
+queueFrame.Name = "QueueFrame"
+queueFrame.AnchorPoint = Vector2.new(0.5, 1)
+queueFrame.Position = UDim2.new(0.5, 0, 1, -30)
+queueFrame.Size = UDim2.new(0, 320, 0, 90)
+queueFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
+queueFrame.BackgroundTransparency = 0.15
+queueFrame.BorderSizePixel = 0
+queueFrame.Visible = false
+queueFrame.Parent = screenGui
+
+local queueCorner = Instance.new("UICorner")
+queueCorner.CornerRadius = UDim.new(0, 16)
+queueCorner.Parent = queueFrame
+
+local queueStroke = Instance.new("UIStroke")
+queueStroke.Color = GameConfig.Palette.LightGreen
+queueStroke.Thickness = 2
+queueStroke.Transparency = 0.3
+queueStroke.Parent = queueFrame
+
+-- Mode name label
+local modeLabel = Instance.new("TextLabel")
+modeLabel.Name = "ModeLabel"
+modeLabel.Size = UDim2.new(1, 0, 0, 28)
+modeLabel.Position = UDim2.new(0, 0, 0, 8)
+modeLabel.BackgroundTransparency = 1
+modeLabel.Text = "SOLO MODE"
+modeLabel.TextColor3 = GameConfig.Palette.LightGreen
+modeLabel.TextSize = 16
+modeLabel.Font = Enum.Font.Nunito
+modeLabel.Parent = queueFrame
+
+-- Player count / status
+local statusLabel = Instance.new("TextLabel")
+statusLabel.Name = "StatusLabel"
+statusLabel.Size = UDim2.new(1, 0, 0, 24)
+statusLabel.Position = UDim2.new(0, 0, 0, 34)
+statusLabel.BackgroundTransparency = 1
+statusLabel.Text = "Waiting for players... (0/1)"
+statusLabel.TextColor3 = GameConfig.Palette.LightGrey
+statusLabel.TextSize = 14
+statusLabel.Font = Enum.Font.Nunito
+statusLabel.Parent = queueFrame
+
+-- Countdown label (big, centered)
+local countdownLabel = Instance.new("TextLabel")
+countdownLabel.Name = "CountdownLabel"
+countdownLabel.Size = UDim2.new(1, 0, 0, 28)
+countdownLabel.Position = UDim2.new(0, 0, 0, 56)
+countdownLabel.BackgroundTransparency = 1
+countdownLabel.Text = ""
+countdownLabel.TextColor3 = GameConfig.Palette.SoftGold
+countdownLabel.TextSize = 20
+countdownLabel.Font = Enum.Font.Nunito
+countdownLabel.Visible = false
+countdownLabel.Parent = queueFrame
+
+-- ========================
+-- ERROR NOTIFICATION (top center)
+-- ========================
+local errorFrame = Instance.new("Frame")
+errorFrame.Name = "ErrorFrame"
+errorFrame.AnchorPoint = Vector2.new(0.5, 0)
+errorFrame.Position = UDim2.new(0.5, 0, 0, -60)
+errorFrame.Size = UDim2.new(0, 400, 0, 50)
+errorFrame.BackgroundColor3 = GameConfig.Palette.BrightOrange
+errorFrame.BackgroundTransparency = 0.1
+errorFrame.BorderSizePixel = 0
+errorFrame.Visible = false
+errorFrame.Parent = screenGui
+
+local errorCorner = Instance.new("UICorner")
+errorCorner.CornerRadius = UDim.new(0, 12)
+errorCorner.Parent = errorFrame
+
+local errorLabel = Instance.new("TextLabel")
+errorLabel.Name = "ErrorLabel"
+errorLabel.Size = UDim2.new(1, -20, 1, 0)
+errorLabel.Position = UDim2.new(0, 10, 0, 0)
+errorLabel.BackgroundTransparency = 1
+errorLabel.Text = ""
+errorLabel.TextColor3 = Color3.fromRGB(255, 220, 220)
+errorLabel.TextSize = 14
+errorLabel.Font = Enum.Font.GothamBold
+errorLabel.TextWrapped = true
+errorLabel.Parent = errorFrame
+
+-- ============================================================
+-- HANDLE QUEUE UPDATES
+-- ============================================================
+local lastQueueState = nil
+local hideTimer = nil
+
+Remotes.QueueUpdate.OnClientEvent:Connect(function(eventType, data)
+	if eventType == "queue" and data then
+		-- Show queue frame
+		queueFrame.Visible = true
+
+		modeLabel.Text = string.upper(data.padName or "MATCH")
+		statusLabel.Text = "Players: " .. (data.current or 0) .. "/" .. (data.required or 1)
+
+		if data.countdown then
+			countdownLabel.Visible = true
+			countdownLabel.Text = "⏱ TELEPORTING IN " .. data.countdown .. "..."
+
+			-- Pulse animation on countdown
+			TweenService:Create(countdownLabel, TweenInfo.new(0.3, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, true), {
+				TextSize = 24
+			}):Play()
+
+			-- Green border glow during countdown
+			TweenService:Create(queueStroke, TweenInfo.new(0.3), {
+				Color = GameConfig.Palette.SoftGold,
+				Transparency = 0
+			}):Play()
+
+			if data.current >= data.required then
+				statusLabel.Text = "Team ready! ✓"
+				statusLabel.TextColor3 = GameConfig.Palette.LightGreen
+			end
+		else
+			countdownLabel.Visible = false
+			TweenService:Create(queueStroke, TweenInfo.new(0.3), {
+				Color = GameConfig.Palette.LightGreen,
+				Transparency = 0.3
+			}):Play()
+
+			if data.current >= data.required then
+				statusLabel.Text = "Team ready! Starting..."
+				statusLabel.TextColor3 = GameConfig.Palette.LightGreen
+			else
+				statusLabel.TextColor3 = GameConfig.Palette.LightGrey
+			end
+		end
+
+		lastQueueState = data
+
+		-- Cancel any pending hide
+		if hideTimer then
+			task.cancel(hideTimer)
+			hideTimer = nil
+		end
+
+	elseif eventType == "cancelled" then
+		-- Countdown was cancelled
+		countdownLabel.Text = "❌ Player left — cancelled"
+		countdownLabel.TextColor3 = GameConfig.Palette.CoralPink
+		countdownLabel.Visible = true
+
+		TweenService:Create(queueStroke, TweenInfo.new(0.3), {
+			Color = GameConfig.Palette.CoralPink,
+			Transparency = 0
+		}):Play()
+
+		hideTimer = task.delay(2, function()
+			countdownLabel.Visible = false
+			queueFrame.Visible = false
+			TweenService:Create(queueStroke, TweenInfo.new(0.3), {
+				Color = GameConfig.Palette.LightGreen,
+				Transparency = 0.3
+			}):Play()
+			hideTimer = nil
+		end)
+
+	elseif eventType == "error" then
+		-- Show error notification
+		errorLabel.Text = "⚠ " .. tostring(data)
+		errorFrame.Visible = true
+
+		-- Slide in from top
+		errorFrame.Position = UDim2.new(0.5, 0, 0, -60)
+		TweenService:Create(errorFrame, TweenInfo.new(0.4, Enum.EasingStyle.Back), {
+			Position = UDim2.new(0.5, 0, 0, 20)
+		}):Play()
+
+		-- Auto-hide after 4 seconds
+		task.delay(4, function()
+			TweenService:Create(errorFrame, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+				Position = UDim2.new(0.5, 0, 0, -60)
+			}):Play()
+			task.wait(0.35)
+			errorFrame.Visible = false
+		end)
+	end
+end)
+
+-- Hide queue panel when player walks away from all pads
+-- (server stops sending updates, so we use a timeout)
+task.spawn(function()
+	while true do
+		task.wait(1.5)
+		if queueFrame.Visible and not hideTimer then
+			-- If we haven't received an update in 1.5s, hide
+			-- The server sends updates every heartbeat while on a pad
+			hideTimer = task.delay(0.5, function()
+				queueFrame.Visible = false
+				countdownLabel.Visible = false
+				hideTimer = nil
+			end)
+		end
+	end
+end)
+
+-- Handle StartGameClient — hide lobby HUD when entering match
+Remotes:WaitForChild("StartGameClient").OnClientEvent:Connect(function()
+	isInLobby = false
+	screenGui.Enabled = false
+end)
+
+print("[EcoSphere] LobbyHUD initialized")
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="LocalScript" referent="30">
+        <Properties>
+          <string name="Name">LobbyShowcase</string>
+          <string name="Source"><![CDATA[-- LobbyShowcase: Client-side interactive class showcase pedestals, 3D rotating holograms, proximity-fade cards, and test-drive trails
+local Players = game:GetService("Players")
+local RS = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+
+local GameConfig = require(RS:WaitForChild("GameConfig"))
+local Remotes = RS:WaitForChild("Remotes")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Skip if this is not the lobby place (detected by checking for Lobby folder)
+local lobby = Workspace:WaitForChild("Lobby", 5)
+if not lobby then
+	return -- Not in the lobby place, exit
+end
+
+-- Create folder to keep showcase parts organized
+local showcaseFolder = lobby:FindFirstChild("ShowcasePedestals")
+if not showcaseFolder then
+	showcaseFolder = Instance.new("Folder")
+	showcaseFolder.Name = "ShowcasePedestals"
+	showcaseFolder.Parent = lobby
+else
+	showcaseFolder:ClearAllChildren()
+end
+
+-- Data configuration for the three class showcase nodes arranged in a central arc on the main island
+-- Placed on the East side of the circular glass floor at radius 88.13 from the lobby center (1427.6759, 634.354919)
+-- spaced widely apart (Economist at -70°, Cultivator at 0°, Advocate at 50°) on clear glass zones
+local classShowcases = {
+	{
+		ClassName = "Economist",
+		TargetPosition = Vector3.new(1512.803, -180, 611.545), -- -15 degrees
+		Title = "💰 THE ECONOMIST",
+		Description = "A soul of commerce reborn. Weaves golden trade-lattices across barren ground, restoring fair-trade routes and zero-waste supply chains through sheer economic willpower.",
+		Color = GameConfig.CLASSES.Economist.Color,
+		Icon = GameConfig.CLASSES.Economist.Icon,
+	},
+	{
+		ClassName = "Cultivator",
+		TargetPosition = Vector3.new(1515.806, -180, 634.355), -- 0 degrees
+		Title = "🌱 THE CULTIVATOR",
+		Description = "An ancient gardener's spirit, reawakened. Injects bio-gels that surge through dead soil, rapidly seeding forests and breathing life back into the planet's crust.",
+		Color = GameConfig.CLASSES.Cultivator.Color,
+		Icon = GameConfig.CLASSES.Cultivator.Icon,
+	},
+	{
+		ClassName = "Advocate",
+		TargetPosition = Vector3.new(1512.803, -180, 657.165), -- 15 degrees
+		Title = "💜 THE ADVOCATE",
+		Description = "A guardian soul from the old world. Deploys smart-dust shields to create safe zones, mapping cultural sanctuaries where resources flow equally to all.",
+		Color = GameConfig.CLASSES.Advocate.Color,
+		Icon = GameConfig.CLASSES.Advocate.Icon,
+	}
+}
+
+-- Find LobbyCenterBarrier to align showcase CFrames
+local barrier = lobby:WaitForChild("LobbyCenterBarrier", 10)
+
+-- Align pedestal flat against the floor normal
+local function getPedestalCFrame(targetPos)
+	local x, z = targetPos.X, targetPos.Z
+	local y = -203 -- Fallback Y
+	local up = Vector3.new(0, 1, 0)
+	
+	if barrier then
+		local C = barrier.Position
+		local N = barrier.CFrame.RightVector
+		-- Solve plane equation: N.X*(x - C.X) + N.Y*(y - C.Y) + N.Z*(z - C.Z) = 0
+		if math.abs(N.Y) > 0.001 then
+			y = C.Y - (N.X * (x - C.X) + N.Z * (z - C.Z)) / N.Y
+		end
+		-- The glass floor upward normal is -N (since N points mostly down)
+		up = -N.Unit
+	else
+		-- Fallback raycast if barrier isn't replicated yet
+		local rayDir = Vector3.new(0, -60, 0)
+		local rayParams = RaycastParams.new()
+		local rayResult = Workspace:Raycast(targetPos, rayDir, rayParams)
+		if rayResult then
+			y = rayResult.Position.Y
+			up = rayResult.Normal
+		end
+	end
+	
+	-- Construct matrix where UpVector is the normal 'up'
+	local right = up:Cross(Vector3.new(0, 0, -1))
+	if right.Magnitude < 0.001 then
+		right = up:Cross(Vector3.new(1, 0, 0))
+	end
+	right = right.Unit
+	local forward = right:Cross(up).Unit
+	
+	return CFrame.fromMatrix(Vector3.new(x, y, z), right, up, forward)
+end
+
+-- Temporary trail preview function for local test-drives
+local function previewTrailForLocalPlayer(className, color)
+	local char = player.Character
+	if not char then return end
+	local root = char:FindFirstChild("HumanoidRootPart")
+	if not root then return end
+
+	-- Cleanup existing preview elements
+	for _, child in ipairs(root:GetChildren()) do
+		if child.Name == "PreviewTrail" or child.Name == "PreviewAtt0" or child.Name == "PreviewAtt1" then
+			child:Destroy()
+		end
+	end
+
+	-- Attachments for trail
+	local att0 = Instance.new("Attachment")
+	att0.Name = "PreviewAtt0"
+	att0.Position = Vector3.new(0, -2, 0)
+	att0.Parent = root
+
+	local att1 = Instance.new("Attachment")
+	att1.Name = "PreviewAtt1"
+	att1.Position = Vector3.new(0, 2, 0)
+	att1.Parent = root
+
+	-- Trail instance
+	local trail = Instance.new("Trail")
+	trail.Name = "PreviewTrail"
+	trail.Attachment0 = att0
+	trail.Attachment1 = att1
+	trail.Color = ColorSequence.new(color)
+	trail.LightEmission = 1.0
+	trail.Lifetime = 0.8
+	trail.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.1),
+		NumberSequenceKeypoint.new(1, 1)
+	})
+	trail.WidthScale = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1.2),
+		NumberSequenceKeypoint.new(1, 0)
+	})
+	trail.Parent = root
+
+	-- Extra visual juice sparks
+	local sparks = Instance.new("ParticleEmitter")
+	sparks.Name = "PreviewTrail"
+	sparks.Color = ColorSequence.new(color)
+	sparks.Texture = "rbxassetid://258129767"
+	sparks.Rate = 50
+	sparks.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.7),
+		NumberSequenceKeypoint.new(1, 0)
+	})
+	sparks.Lifetime = NumberRange.new(0.4, 0.7)
+	sparks.Speed = NumberRange.new(4, 9)
+	sparks.Parent = root
+
+	-- Sparkle sound effect
+	local sound = Instance.new("Sound")
+	sound.SoundId = "rbxassetid://8413626241" -- sparkle/beam charge sound
+	sound.Volume = 0.5
+	sound.Parent = root
+	sound:Play()
+	game:GetService("Debris"):AddItem(sound, 2)
+
+	-- Auto-cleanup after 8 seconds
+	task.delay(8, function()
+		if att0.Parent then att0:Destroy() end
+		if att1.Parent then att1:Destroy() end
+		if trail.Parent then trail:Destroy() end
+		if sparks.Parent then sparks:Destroy() end
+	end)
+end
+
+local trackedPedestals = {}
+
+-- Construct the physical pedestals and local hologram instances
+for _, data in ipairs(classShowcases) do
+	local pedCFrame = getPedestalCFrame(data.TargetPosition)
+	local pedModel = Instance.new("Model")
+	pedModel.Name = data.ClassName .. "_Showcase"
+	pedModel.Parent = showcaseFolder
+
+	-- Base: Circular metal plate flat on ground (matching the matchmaking pads)
+	local base = Instance.new("Part")
+	base.Name = "Base"
+	base.Shape = Enum.PartType.Cylinder
+	base.Size = Vector3.new(0.6, 13, 13)
+	base.Material = Enum.Material.Metal
+	base.Color = Color3.fromRGB(45, 48, 52) -- Charcoal metal color matching the matchmaking pad ring
+	base.Anchored = true
+	base.CanCollide = true
+	base.CFrame = pedCFrame * CFrame.Angles(0, 0, math.rad(90))
+	base.Parent = pedModel
+
+	-- Core: Glowing inner neon ring (matching the matchmaking pads)
+	local core = Instance.new("Part")
+	core.Name = "CoreRing"
+	core.Shape = Enum.PartType.Cylinder
+	core.Size = Vector3.new(0.7, 12, 12)
+	core.Material = Enum.Material.Neon
+	core.Color = data.Color
+	core.Transparency = 0.2 -- matching the matchmaking pad transparency
+	core.Anchored = true
+	core.CanCollide = false
+	core.CFrame = pedCFrame * CFrame.Angles(0, 0, math.rad(90))
+	core.Parent = pedModel
+
+	-- Particle Emitter projecting upwards
+	local projector = Instance.new("ParticleEmitter")
+	projector.Name = "ProjectorBeam"
+	projector.Texture = "rbxassetid://243664365"
+	projector.Color = ColorSequence.new(data.Color)
+	projector.Size = NumberSequence.new({NumberSequenceKeypoint.new(0, 0.4), NumberSequenceKeypoint.new(1, 0)})
+	projector.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 1),
+		NumberSequenceKeypoint.new(0.2, 0.4),
+		NumberSequenceKeypoint.new(0.8, 0.4),
+		NumberSequenceKeypoint.new(1, 1)
+	})
+	projector.Lifetime = NumberRange.new(1.0, 1.4)
+	projector.Rate = 14
+	projector.Speed = NumberRange.new(3, 5)
+	projector.EmissionDirection = Enum.NormalId.Top
+	projector.Parent = core
+
+	-- Hologram Shell: Floating glass bubble
+	local shell = Instance.new("Part")
+	shell.Name = "HoloShell"
+	shell.Shape = Enum.PartType.Ball
+	shell.Size = Vector3.new(2.2, 2.2, 2.2)
+	shell.Material = Enum.Material.SmoothPlastic
+	shell.Color = data.Color
+	shell.Transparency = 0.6
+	shell.Anchored = true
+	shell.CanCollide = false
+	shell.CFrame = CFrame.new(pedCFrame.Position + pedCFrame.UpVector * 5.0) -- Floats slightly higher above the larger pad
+	shell.Parent = pedModel
+
+	-- Ethereal bright colors for the souls so they look like pure energy
+	local soulColors = {
+		Economist = Color3.fromHex("#FFEFA6"), -- Ethereal bright gold
+		Cultivator = Color3.fromHex("#D1FAD7"), -- Ethereal mint green
+		Advocate = Color3.fromHex("#FFD4DC"), -- Ethereal pastel pink
+	}
+	local soulColor = soulColors[data.ClassName] or data.Color
+
+	-- Soul core: 4 glowing neon spheres for a complex, highly organic lava lamp morphing effect
+	local coreGeom = {}
+	coreGeom.Blobs = {}
+
+	local blobConfigs = {
+		{ Name = "SoulSphere1", BaseSize = 0.85, ScaleAmp = 0.25, BobSpeed = 1.4, BobAmp = 0.20, Phase = 0.0 },
+		{ Name = "SoulSphere2", BaseSize = 0.60, ScaleAmp = 0.18, BobSpeed = 2.0, BobAmp = 0.35, Phase = 1.8 },
+		{ Name = "SoulSphere3", BaseSize = 0.45, ScaleAmp = 0.14, BobSpeed = 2.6, BobAmp = 0.40, Phase = 3.5 },
+		{ Name = "SoulSphere4", BaseSize = 0.30, ScaleAmp = 0.10, BobSpeed = 3.2, BobAmp = 0.45, Phase = 5.0 }
+	}
+
+	for _, config in ipairs(blobConfigs) do
+		local blob = Instance.new("Part")
+		blob.Name = config.Name
+		blob.Shape = Enum.PartType.Ball
+		blob.Size = Vector3.new(config.BaseSize, config.BaseSize, config.BaseSize)
+		blob.Color = soulColor
+		blob.Material = Enum.Material.Neon
+		blob.CanCollide = false
+		blob.Anchored = true
+		blob.Parent = pedModel
+
+		table.insert(coreGeom.Blobs, {
+			Part = blob,
+			BaseSize = config.BaseSize,
+			ScaleAmp = config.ScaleAmp,
+			BobSpeed = config.BobSpeed,
+			BobAmp = config.BobAmp,
+			Phase = config.Phase
+		})
+	end
+
+	-- BillboardGui Card (Must be parented to PlayerGui for buttons to be interactive!)
+	local bg = Instance.new("BillboardGui")
+	bg.Name = data.ClassName .. "_ShowcaseUI"
+	bg.Size = UDim2.new(0, 260, 0, 160)
+	bg.StudsOffset = Vector3.new(0, 3.5, 0) -- Positioned above the player's head relative to the hologram
+	bg.AlwaysOnTop = true
+	bg.Active = true
+	bg.Enabled = false -- Start hidden
+	bg.Adornee = shell
+	bg.Parent = playerGui
+
+	-- Card main Frame (handles springy size tweens)
+	local frame = Instance.new("Frame")
+	frame.Name = "CardFrame"
+	frame.AnchorPoint = Vector2.new(0.5, 0.5)
+	frame.Position = UDim2.new(0.5, 0, 0.5, 0)
+	frame.Size = UDim2.new(0, 0, 0, 0) -- Starts at 0 size
+	frame.BackgroundTransparency = 0.15
+	frame.BackgroundColor3 = GameConfig.Palette.DarkTeal
+	frame.BorderSizePixel = 0
+	frame.Parent = bg
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 14)
+	corner.Parent = frame
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = data.Color
+	stroke.Thickness = 2
+	stroke.Transparency = 0.3
+	stroke.Parent = frame
+
+	-- Card Title
+	local title = Instance.new("TextLabel")
+	title.Name = "TitleLabel"
+	title.Size = UDim2.new(1, 0, 0, 26)
+	title.Position = UDim2.new(0, 0, 0, 10)
+	title.BackgroundTransparency = 1
+	title.Text = data.Title
+	title.TextColor3 = data.Color
+	title.TextSize = 16
+	title.Font = Enum.Font.Nunito
+	title.Parent = frame
+
+	-- Card Description
+	local desc = Instance.new("TextLabel")
+	desc.Name = "DescLabel"
+	desc.Size = UDim2.new(0.9, 0, 0, 68)
+	desc.Position = UDim2.new(0.05, 0, 0, 40)
+	desc.BackgroundTransparency = 1
+	desc.Text = data.Description
+	desc.TextColor3 = GameConfig.Palette.Cream
+	desc.TextSize = 12
+	desc.Font = Enum.Font.Nunito
+	desc.TextWrapped = true
+	desc.TextYAlignment = Enum.TextYAlignment.Top
+	desc.Parent = frame
+
+	-- "Test Drive" Button
+	local btn = Instance.new("TextButton")
+	btn.Name = "TestDriveBtn"
+	btn.Size = UDim2.new(0.8, 0, 0, 28)
+	btn.Position = UDim2.new(0.1, 0, 0.72, 0)
+	btn.BackgroundColor3 = data.Color
+	btn.Text = "⚡ TEST DRIVE TRAIL"
+	btn.TextColor3 = GameConfig.Palette.DarkTeal
+	btn.TextSize = 11
+	btn.Font = Enum.Font.Nunito
+	btn.Parent = frame
+
+	local btnCorner = Instance.new("UICorner")
+	btnCorner.CornerRadius = UDim.new(0, 8)
+	btnCorner.Parent = btn
+
+	-- Button bounce feedback & trigger trail preview
+	btn.MouseButton1Click:Connect(function()
+		-- Bounce tween animation
+		local ts = TweenService:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {
+			Size = UDim2.new(0.72, 0, 0, 24),
+			Position = UDim2.new(0.14, 0, 0.73, 0)
+		})
+		ts:Play()
+		ts.Completed:Wait()
+		TweenService:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {
+			Size = UDim2.new(0.8, 0, 0, 28),
+			Position = UDim2.new(0.1, 0, 0.72, 0)
+		}):Play()
+
+		previewTrailForLocalPlayer(data.ClassName, data.Color)
+	end)
+
+	-- Save reference for heartbeat updates
+	table.insert(trackedPedestals, {
+		PedCFrame = pedCFrame,
+		Shell = shell,
+		BillboardGui = bg,
+		CardFrame = frame,
+		CoreGeom = coreGeom,
+		ClassName = data.ClassName,
+		Color = data.Color,
+		IsNear = false,
+		HologramScale = 1.0,
+	})
+end
+
+-- Perform initial state setup based on player position at load time
+task.spawn(function()
+	local char = player.Character or player.CharacterAdded:Wait()
+	local root = char:WaitForChild("HumanoidRootPart", 10)
+	if root then
+		local charPos = root.Position
+		for _, ped in ipairs(trackedPedestals) do
+			local dist = (charPos - ped.PedCFrame.Position).Magnitude
+			local isNear = (dist <= 16)
+			
+			ped.IsNear = isNear
+			ped.BillboardGui.Enabled = isNear
+			if isNear then
+				ped.CardFrame.Size = UDim2.new(1, 0, 1, 0)
+				ped.Shell.Size = Vector3.new(2.8, 2.8, 2.8)
+			else
+				ped.CardFrame.Size = UDim2.new(0, 0, 0, 0)
+				ped.Shell.Size = Vector3.new(2.2, 2.2, 2.2)
+			end
+		end
+	end
+end)
+
+-- Render and Proximity Loop
+local activeTweens = {}
+
+
+RunService.Heartbeat:Connect(function(dt)
+	local char = player.Character
+	local root = char and char:FindFirstChild("HumanoidRootPart")
+	if not root then return end
+
+	local charPos = root.Position
+	local detectionRadius = 16
+
+	local timeVal = tick()
+
+
+	for _, ped in ipairs(trackedPedestals) do
+		-- 1. Bob and morph the lava lamp blobs inside the hologram bubble
+		local shell = ped.Shell
+		
+		-- Unique offsets per class to prevent sync
+		local classOffset = (ped.ClassName == "Economist" and 0 or ped.ClassName == "Cultivator" and 2 or 4)
+
+		-- Bob and morph each of the 4 lava lamp blobs
+		if ped.CoreGeom.Blobs then
+			for _, blobInfo in ipairs(ped.CoreGeom.Blobs) do
+				local part = blobInfo.Part
+				if part and part.Parent then
+					-- Position bobbing
+					local t = timeVal * blobInfo.BobSpeed + blobInfo.Phase + classOffset
+					local bob = math.sin(t) * blobInfo.BobAmp
+					part.CFrame = shell.CFrame * CFrame.new(0, bob, 0)
+
+					-- Highly morphic scale squishing and stretching along X, Y, and Z axes
+					local sx = blobInfo.BaseSize + math.sin(t * 1.6) * blobInfo.ScaleAmp
+					local sy = blobInfo.BaseSize + math.cos(t * 1.3) * blobInfo.ScaleAmp
+					local sz = blobInfo.BaseSize + math.sin(t * 2.1) * blobInfo.ScaleAmp
+					part.Size = Vector3.new(sx, sy, sz)
+				end
+			end
+		end
+
+		-- 2. Proximity Detection Check
+		local dist = (charPos - ped.PedCFrame.Position).Magnitude
+		local isNear = (dist <= detectionRadius)
+		
+		local bg = ped.BillboardGui
+		local frame = ped.CardFrame
+		
+		if isNear and not ped.IsNear then
+			ped.IsNear = true
+			
+			-- Cancel any ongoing tween for this frame
+			if activeTweens[frame] then
+				activeTweens[frame]:Cancel()
+				activeTweens[frame] = nil
+			end
+
+			-- Make BillboardGui active/enabled
+			bg.Enabled = true
+
+			-- Pop in card frame with springy bounce scale
+			local tween = TweenService:Create(frame, TweenInfo.new(0.4, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+				Size = UDim2.new(1, 0, 1, 0)
+			})
+			activeTweens[frame] = tween
+			tween:Play()
+
+			-- Scale up hologram glass shell
+			TweenService:Create(shell, TweenInfo.new(0.3, Enum.EasingStyle.Elastic), {
+				Size = Vector3.new(2.8, 2.8, 2.8)
+			}):Play()
+
+		elseif not isNear and ped.IsNear then
+			ped.IsNear = false
+			
+			-- Cancel any ongoing tween for this frame
+			if activeTweens[frame] then
+				activeTweens[frame]:Cancel()
+				activeTweens[frame] = nil
+			end
+
+			-- Shrink card frame out of view
+			local tween = TweenService:Create(frame, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+				Size = UDim2.new(0, 0, 0, 0)
+			})
+			activeTweens[frame] = tween
+			
+			local conn
+			conn = tween.Completed:Connect(function()
+				bg.Enabled = false
+				activeTweens[frame] = nil
+				conn:Disconnect()
+			end)
+			tween:Play()
+
+			-- Scale down hologram glass shell
+			TweenService:Create(shell, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {
+				Size = Vector3.new(2.2, 2.2, 2.2)
+			}):Play()
+		end
+	end
+end)
+
+-- Clean up player GUI billboard objects if showcase is destroyed/shutdown
+if showcaseFolder then
+	showcaseFolder.AncestryChanged:Connect(function()
+		if not showcaseFolder:IsDescendantOf(game) then
+			for _, ped in ipairs(trackedPedestals) do
+				if ped.BillboardGui then
+					ped.BillboardGui:Destroy()
+				end
+			end
+		end
+	end)
+end
+
+print("[EcoSphere] LobbyShowcase initialized")
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="LocalScript" referent="31">
+        <Properties>
+          <string name="Name">MusicManager</string>
+          <string name="Source"><![CDATA[-- MusicManager: Handles smooth transition of background music between Lobby and In-Game
+-- Uses game state events instead of distance-based checking
+local Players = game:GetService("Players")
+local RS = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local Remotes = RS:WaitForChild("Remotes")
+
+local player = Players.LocalPlayer
+
+-- Wait for sounds in Workspace
+local soundOrbital = workspace:WaitForChild("Orbital Dawn")
+local soundTitanium = workspace:WaitForChild("Titanium (Underscore A)")
+
+-- Configure sounds
+soundOrbital.Looped = true
+soundTitanium.Looped = true
+
+-- Target volumes
+local LOBBY_VOLUME = 0.5
+local GAME_VOLUME = 0.5
+local FADE_DURATION = 1.5
+
+local currentTrack = nil -- "orbital" or "titanium" or "none"
+
+local function playTrack(trackName)
+	if currentTrack == trackName then return end
+	currentTrack = trackName
+	
+	if trackName == "orbital" then
+		-- Fade in Orbital Dawn, fade out Titanium
+		local t1 = TweenService:Create(soundOrbital, TweenInfo.new(FADE_DURATION, Enum.EasingStyle.Linear), {Volume = LOBBY_VOLUME})
+		if not soundOrbital.IsPlaying then
+			soundOrbital.Volume = 0
+			soundOrbital:Play()
+		end
+		t1:Play()
+		
+		local t2 = TweenService:Create(soundTitanium, TweenInfo.new(FADE_DURATION, Enum.EasingStyle.Linear), {Volume = 0})
+		t2:Play()
+		task.spawn(function()
+			t2.Completed:Wait()
+			if currentTrack == "orbital" and soundTitanium.IsPlaying then
+				soundTitanium:Stop()
+			end
+		end)
+		
+	elseif trackName == "titanium" then
+		-- Fade in Titanium, fade out Orbital Dawn
+		local t1 = TweenService:Create(soundTitanium, TweenInfo.new(FADE_DURATION, Enum.EasingStyle.Linear), {Volume = GAME_VOLUME})
+		if not soundTitanium.IsPlaying then
+			soundTitanium.Volume = 0
+			soundTitanium:Play()
+		end
+		t1:Play()
+		
+		local t2 = TweenService:Create(soundOrbital, TweenInfo.new(FADE_DURATION, Enum.EasingStyle.Linear), {Volume = 0})
+		t2:Play()
+		task.spawn(function()
+			t2.Completed:Wait()
+			if currentTrack == "titanium" and soundOrbital.IsPlaying then
+				soundOrbital:Stop()
+			end
+		end)
+		
+	elseif trackName == "none" then
+		-- Fade out both
+		local t1 = TweenService:Create(soundOrbital, TweenInfo.new(FADE_DURATION, Enum.EasingStyle.Linear), {Volume = 0})
+		local t2 = TweenService:Create(soundTitanium, TweenInfo.new(FADE_DURATION, Enum.EasingStyle.Linear), {Volume = 0})
+		t1:Play()
+		t2:Play()
+		task.spawn(function()
+			t1.Completed:Wait()
+			if currentTrack == "none" and soundOrbital.IsPlaying then
+				soundOrbital:Stop()
+			end
+		end)
+		task.spawn(function()
+			t2.Completed:Wait()
+			if currentTrack == "none" and soundTitanium.IsPlaying then
+				soundTitanium:Stop()
+			end
+		end)
+	end
+end
+
+-- Default: start with lobby music
+-- On match servers, StartGameClient will switch to game music
+playTrack("orbital")
+
+-- Listen to StartGameClient (fires when player enters match)
+Remotes:WaitForChild("StartGameClient").OnClientEvent:Connect(function()
+	playTrack("titanium")
+end)
+
+-- Listen to Game State changes
+Remotes.GameStateChanged.OnClientEvent:Connect(function(state, timeLeft)
+	if state == "playing" then
+		playTrack("titanium")
+	elseif state == "victory" or state == "defeat" then
+		playTrack("none")
+	end
+end)
+
+-- Listen to ReturnToLobby
+Remotes:WaitForChild("ReturnToLobby").OnClientEvent:Connect(function()
+	playTrack("orbital")
+end)
+
+print("[EcoSphere] MusicManager initialized")
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="LocalScript" referent="32">
+        <Properties>
+          <string name="Name">PlanetaryMovement</string>
+          <string name="Source"><![CDATA[-- PlanetaryMovement: Gravity, rolling, and camera for sphere character
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UIS = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local RS = game:GetService("ReplicatedStorage")
+local GameConfig = require(RS:WaitForChild("GameConfig"))
+local Remotes = RS:WaitForChild("Remotes")
+
+warn("[PM-DEBUG] Client Script Loaded!")
+
+-- Handle bounce from Lobby pads
+local function showClassPopup(className)
+	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+	local sg = playerGui:FindFirstChild("ClassPopup")
+	if sg then sg:Destroy() end
+	
+	sg = Instance.new("ScreenGui")
+	sg.Name = "ClassPopup"
+	sg.IgnoreGuiInset = true
+	
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(1, 0, 1, 0)
+	frame.BackgroundTransparency = 1
+	frame.Parent = sg
+	
+	local classData = GameConfig.CLASSES[className]
+	local title = Instance.new("TextLabel")
+	title.Size = UDim2.new(1, 0, 0, 100)
+	title.Position = UDim2.new(0, 0, 0.4, 0)
+	title.BackgroundTransparency = 1
+	title.Font = Enum.Font.Nunito
+	title.Text = "YOU ARE: " .. string.upper(className)
+	title.TextColor3 = classData.Color
+	title.TextScaled = true
+	title.TextTransparency = 1
+	title.TextStrokeTransparency = 1
+	title.TextStrokeColor3 = Color3.new(0, 0, 0)
+	title.Parent = frame
+	sg.Parent = playerGui
+	
+	task.spawn(function()
+		local ts = game:GetService("TweenService")
+		ts:Create(title, TweenInfo.new(0.5, Enum.EasingStyle.Back), {TextTransparency = 0, TextStrokeTransparency = 0, Position = UDim2.new(0, 0, 0.35, 0)}):Play()
+		task.wait(3)
+		local fade = ts:Create(title, TweenInfo.new(0.5), {TextTransparency = 1, TextStrokeTransparency = 1, Position = UDim2.new(0, 0, 0.3, 0)})
+		fade:Play()
+		fade.Completed:Wait()
+		if sg and sg.Parent then sg:Destroy() end
+	end)
+end
+
+Remotes:WaitForChild("StartGameClient").OnClientEvent:Connect(function(className)
+	warn("[PM-DEBUG] StartGameClient received for class: " .. tostring(className))
+	Remotes.SelectClass:FireServer(className)
+	_G.ClassSelected = true
+	showClassPopup(className)
+end)
+
+UIS.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed or not _G.ClassSelected then return end
+	
+	local newClass = nil
+	if input.KeyCode == Enum.KeyCode.One then
+		newClass = "Economist"
+	elseif input.KeyCode == Enum.KeyCode.Two then
+		newClass = "Cultivator"
+	elseif input.KeyCode == Enum.KeyCode.Three then
+		newClass = "Advocate"
+	end
+	
+	if newClass then
+		Remotes.SelectClass:FireServer(newClass)
+		showClassPopup(newClass)
+	end
+end)
+
+local player = Players.LocalPlayer
+local camera = Workspace.CurrentCamera
+
+local PLANET_CENTER = GameConfig.PLANET_CENTER
+local GRAVITY_STRENGTH = GameConfig.GRAVITY_STRENGTH
+local ROLL_SPEED = GameConfig.ROLL_SPEED
+
+local renderConn
+
+local function onCharacterAdded(character)
+	warn("[PM-DEBUG] CharacterAdded fired for: " .. tostring(character.Name))
+	
+	if renderConn then
+		warn("[PM-DEBUG] Disconnecting old render connection")
+		renderConn:Disconnect()
+		renderConn = nil
+	end
+
+	local rootPart = character:WaitForChild("HumanoidRootPart", 10)
+	if not rootPart then
+		warn("[PM-DEBUG] No HumanoidRootPart found!")
+		return
+	end
+	
+	local humanoid = character:WaitForChild("Humanoid", 10)
+	if not humanoid then
+		warn("[PM-DEBUG] No Humanoid found!")
+		return
+	end
+
+	-- Reset camera and mouse behavior to default immediately to prevent locking/freezing
+	camera.CameraType = Enum.CameraType.Custom
+	camera.CameraSubject = humanoid
+	UIS.MouseBehavior = Enum.MouseBehavior.Default
+
+	-- Get physics objects (will timeout for normal avatars in the lobby)
+	warn("[PM-DEBUG] Waiting for PlanetGravity...")
+	local gravityForce = rootPart:WaitForChild("PlanetGravity", 5)
+	if not gravityForce then 
+		warn("[PM-DEBUG] PlanetGravity not found, this character is not a sphere")
+		-- Don't reset ClassSelected here — on match servers the sphere swap hasn't happened yet
+		return 
+	end
+	
+	local rollTorque = rootPart:WaitForChild("RollTorque", 5)
+	if not rollTorque then 
+		warn("[PM-DEBUG] RollTorque not found!")
+		return 
+	end
+
+	warn("[PM-DEBUG] Successfully initialized sphere physics objects")
+	
+	-- Enable PlatformStand ONLY for the sphere character
+	humanoid.PlatformStand = true
+
+	-- Camera setup
+	local cameraDistance = 55
+	local cameraHeight = 45
+	local cameraSensitivity = 0.003
+	local currentForward = Vector3.new(0, 0, -1)
+
+	-- Input tracking
+	local mouseDelta = Vector2.new(0, 0)
+	local jumpInput = false
+	local keysDown = {}
+	
+	UIS.InputBegan:Connect(function(input, processed)
+		if UIS:GetFocusedTextBox() then return end
+		keysDown[input.KeyCode] = true
+		if input.KeyCode == Enum.KeyCode.Space then
+			jumpInput = true
+		end
+	end)
+	UIS.InputEnded:Connect(function(input, processed)
+		keysDown[input.KeyCode] = nil
+		if input.KeyCode == Enum.KeyCode.Space then
+			jumpInput = false
+		end
+	end)
+
+	local lastPaintTime = 0
+	local controlActive = false
+
+	local function activateControls()
+		warn("[PM-DEBUG] Activating controls, controlActive was: " .. tostring(controlActive))
+		if controlActive then return end
+		controlActive = true
+		camera.CameraType = Enum.CameraType.Scriptable
+		UIS.MouseBehavior = Enum.MouseBehavior.LockCenter
+	end
+
+	-- Main physics + camera loop
+	activateControls()
+	renderConn = RunService.RenderStepped:Connect(function(dt)
+		if not character.Parent or not rootPart.Parent then return end
+
+		local playerPos = rootPart.Position
+		local planetDir = (PLANET_CENTER - playerPos)
+		local distFromCenter = planetDir.Magnitude
+		local gravDir = planetDir.Unit
+
+		local mass = rootPart:GetMass()
+		local antiGravity = Vector3.new(0, mass * workspace.Gravity, 0)
+		gravityForce.Force = (gravDir * mass * GRAVITY_STRENGTH) + antiGravity
+
+		local surfaceNormal = -gravDir
+		local up = surfaceNormal
+
+		if not controlActive then return end
+
+		local delta = UIS:GetMouseDelta()
+		local yawCF = CFrame.fromAxisAngle(up, -delta.X * cameraSensitivity)
+		currentForward = yawCF:VectorToWorldSpace(currentForward)
+		currentForward = (currentForward - up * currentForward:Dot(up))
+		if currentForward.Magnitude < 0.001 then
+			currentForward = up:Cross(Vector3.new(1, 0, 0))
+		end
+		local rotatedForward = currentForward.Unit
+		local rotatedRight = rotatedForward:Cross(up).Unit
+
+		local camPos = playerPos - (rotatedForward * cameraDistance) + (up * cameraHeight)
+		camera.CFrame = CFrame.lookAt(camPos, playerPos + (up * 4), up)
+
+		-- Dynamic FOV based on boost
+		if player:GetAttribute("BoostActive") then
+			camera.FieldOfView = camera.FieldOfView + (90 - camera.FieldOfView) * (dt * 10)
+		else
+			camera.FieldOfView = camera.FieldOfView + (70 - camera.FieldOfView) * (dt * 10)
+		end
+
+		local inputVec = Vector3.new(0, 0, 0)
+		if keysDown[Enum.KeyCode.W] then inputVec = inputVec + rotatedForward end
+		if keysDown[Enum.KeyCode.S] then inputVec = inputVec - rotatedForward end
+		if keysDown[Enum.KeyCode.D] then inputVec = inputVec + rotatedRight end
+		if keysDown[Enum.KeyCode.A] then inputVec = inputVec - rotatedRight end
+
+		if inputVec.Magnitude > 0.01 then
+			inputVec = inputVec.Unit
+			local torqueAxis = up:Cross(inputVec)
+			local speedMultiplier = character:GetAttribute("ArchitectSurge") and 1.5 or 1
+			if player:GetAttribute("BoostActive") then
+				speedMultiplier = speedMultiplier * 2.2
+			end
+			
+			rollTorque.AngularVelocity = torqueAxis * (ROLL_SPEED * speedMultiplier)
+			rollTorque.MaxTorque = GameConfig.MAX_TORQUE
+
+		else
+			-- Active braking: apply 0 angular velocity with moderate torque so the player can stop
+			rollTorque.AngularVelocity = Vector3.new(0, 0, 0)
+			rollTorque.MaxTorque = GameConfig.MAX_TORQUE * 0.35
+		end
+
+		if jumpInput then
+			local surfaceDist = distFromCenter - GameConfig.PLANET_RADIUS
+			if surfaceDist < 8 then
+				rootPart:ApplyImpulse(surfaceNormal * mass * 120)
+				jumpInput = false
+			end
+		end
+
+		local now = tick()
+		if now - lastPaintTime >= GameConfig.PAINT_INTERVAL then
+			local surfaceDist = distFromCenter - GameConfig.PLANET_RADIUS
+			if surfaceDist < 8 then
+				-- Only paint if we've moved enough distance (prevents piling up at spawn)
+				if not lastPaintPos or (rootPart.Position - lastPaintPos).Magnitude > 2.5 then
+					Remotes.PaintTrail:FireServer(rootPart.Position, surfaceNormal)
+					lastPaintTime = now
+					lastPaintPos = rootPart.Position
+				end
+			end
+		end
+	end)
+
+	humanoid.StateChanged:Connect(function(_, newState)
+		humanoid.PlatformStand = true
+	end)
+end
+
+if player.Character then
+	onCharacterAdded(player.Character)
+end
+player.CharacterAdded:Connect(onCharacterAdded)
+]]></string>
+        </Properties>
+      </Item>
+      <Item class="LocalScript" referent="33">
+        <Properties>
+          <string name="Name">SphereVisuals</string>
+          <string name="Source">-- SphereVisuals: Client-side game juice (squash/stretch, core animations, speed wakes, sound hum)
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local TweenService = game:GetService("TweenService")
+local RS = game:GetService("ReplicatedStorage")
+local GameConfig = require(RS:WaitForChild("GameConfig"))
+
+local ActiveCharacters = {}
+
+-- Spawns a physical 3D leaf that flutters and fades out
+local function spawn3DLeaf(position, velocity)
+	local leaf = Instance.new("Part")
+	leaf.Name = "VisualLeaf"
+	leaf.Size = Vector3.new(0.7, 0.15, 1.2)
+	leaf.Color = GameConfig.CLASSES.Cultivator.Color
+	leaf.Material = Enum.Material.SmoothPlastic
+	leaf.CanCollide = false
+	leaf.Massless = true
+	
+	-- Rotate leaf slightly
+	leaf.CFrame = CFrame.new(position) * CFrame.Angles(
+		math.rad(math.random(-45, 45)),
+		math.rad(math.random(0, 360)),
+		math.rad(math.random(-45, 45))
+	)
+	
+	-- Apply physics velocities for realistic drift
+	leaf.AssemblyLinearVelocity = -velocity * 0.15 + Vector3.new(
+		math.random(-5, 5),
+		math.random(4, 9),
+		math.random(-5, 5)
+	)
+	leaf.AssemblyAngularVelocity = Vector3.new(
+		math.random(-15, 15),
+		math.random(-15, 15),
+		math.random(-15, 15)
+	)
+	
+	leaf.Parent = Workspace
+	
+	-- Fade out and clean up
+	task.spawn(function()
+		local start = tick()
+		local duration = 1.0
+		while tick() - start &lt; duration do
+			local t = (tick() - start) / duration
+			if not leaf or not leaf.Parent then break end
+			-- Add a slight downward floating force
+			leaf.AssemblyLinearVelocity = leaf.AssemblyLinearVelocity + Vector3.new(
+				math.sin(tick() * 4) * 0.15,
+				-0.3,
+				0
+			)
+			leaf.Transparency = t
+			task.wait(0.04)
+		end
+		if leaf then leaf:Destroy() end
+	end)
+end
+
+-- Update loop for individual character visuals
+local function updateCharacterVisuals(charData, dt)
+	local character = charData.Character
+	local root = charData.Root
+	local shell = charData.Shell
+	local className = charData.ClassName
+	local sound = charData.Sound
+	local shellWeld = charData.ShellWeld
+	local visualMesh = charData.VisualMesh
+	
+	if not character.Parent or not root.Parent or not shell.Parent then
+		return false
+	end
+	
+	local velocity = root.AssemblyLinearVelocity
+	local speed = velocity.Magnitude
+	
+	-- 1. Squash and Stretch CFrame alignment
+	local targetCF
+	if speed &gt; 2 then
+		targetCF = CFrame.lookAt(root.Position, root.Position + velocity)
+	else
+		targetCF = root.CFrame
+	end
+	
+	-- Counteract ball's physical rotation to keep the squash/stretch aligned with movement
+	local targetC0 = root.CFrame:Inverse() * targetCF
+	shellWeld.C0 = shellWeld.C0:Lerp(targetC0, math.clamp(dt * 15, 0, 1))
+	
+	-- 2. Ricochet Impact / Squash &amp; Stretch calculation
+	local deltaV = (velocity - charData.LastVelocity)
+	charData.LastVelocity = velocity
+	
+	-- Detect rapid speed change or direction flip (ricochet!)
+	if deltaV.Magnitude &gt; 24 and speed &lt; charData.LastSpeed * 0.8 then
+		charData.SquashAmount = math.clamp(deltaV.Magnitude * 0.015, 0.15, 0.45)
+		charData.SquashTimer = 0.22 -- duration of pancaking
+		charData.SquashNormal = deltaV.Unit
+		
+		-- Play visual bounce sound
+		local bounceSound = Instance.new("Sound")
+		bounceSound.SoundId = "rbxassetid://6382103525" -- bouncy boing sound
+		bounceSound.Volume = 0.35 * (deltaV.Magnitude / 40)
+		bounceSound.Parent = root
+		bounceSound:Play()
+		game:GetService("Debris"):AddItem(bounceSound, 1.2)
+	end
+	charData.LastSpeed = speed
+	
+	local scaleX, scaleY, scaleZ = 1, 1, 1
+	
+	if charData.SquashTimer &gt; 0 then
+		charData.SquashTimer = charData.SquashTimer - dt
+		local t = charData.SquashTimer / 0.22
+		local currentSquash = charData.SquashAmount * math.sin(t * math.pi)
+		
+		scaleZ = 1 - currentSquash
+		scaleX = 1 + currentSquash * 0.5
+		scaleY = 1 + currentSquash * 0.5
+		
+		-- Rotate weld towards impact normal during squashing
+		local impactCF = CFrame.lookAt(root.Position, root.Position + charData.SquashNormal)
+		local impactC0 = root.CFrame:Inverse() * impactCF
+		shellWeld.C0 = shellWeld.C0:Lerp(impactC0, math.clamp(dt * 20, 0, 1))
+	else
+		-- Elongate based on speed (stretch along Z, squash X and Y)
+		local stretch = math.clamp(speed * 0.0035, 0, 0.35)
+		scaleZ = 1 + stretch
+		scaleX = 1 - stretch * 0.5
+		scaleY = 1 - stretch * 0.5
+	end
+	
+	visualMesh.Scale = Vector3.new(scaleX, scaleY, scaleZ)
+	
+	-- 3. Core Animations (Spin and Pulsate)
+	local coreModel = character:FindFirstChild("CoreModel")
+	if coreModel then
+		local coreBase = coreModel:FindFirstChild("CoreBase")
+		if coreBase then
+			local coreWeld = coreBase:FindFirstChild("CoreWeld")
+			if coreWeld then
+				charData.CoreAngle = (charData.CoreAngle or 0) + dt * charData.CoreSpinSpeed
+				if className == "Economist" then
+					-- Rapid diamond spin around multiple axes
+					coreWeld.C0 = CFrame.Angles(charData.CoreAngle * 0.4, charData.CoreAngle, 0)
+				elseif className == "Cultivator" then
+					-- Gentle seed cylinder bobbing + slow rotation
+					local bob = math.sin(tick() * 3.5) * 0.2
+					coreWeld.C0 = CFrame.new(0, bob, 0) * CFrame.Angles(charData.CoreAngle * 0.25, 0, math.rad(90))
+				elseif className == "Advocate" then
+					-- Pulsating magenta core size + orbit ring spin
+					local pulse = 1 + math.sin(tick() * 7.5) * 0.15
+					coreBase.Size = Vector3.new(1.5, 1.5, 1.5) * pulse
+					
+					local r1 = coreModel:FindFirstChild("Ring1")
+					local r2 = coreModel:FindFirstChild("Ring2")
+					if r1 then r1.Size = Vector3.new(0.35 * pulse, 2.6 * pulse, 2.6 * pulse) end
+					if r2 then r2.Size = Vector3.new(0.35 * pulse, 2.6 * pulse, 2.6 * pulse) end
+					
+					coreWeld.C0 = CFrame.Angles(0, charData.CoreAngle, 0)
+				end
+			end
+		end
+	end
+	
+	-- 4. Speed Emitter and Trail Wakes
+	if className == "Economist" then
+		local sparks = root:FindFirstChild("SparksEmitter")
+		if sparks then
+			if speed &gt; 10 then
+				sparks.Enabled = true
+				sparks.Rate = math.clamp((speed - 10) * 1.6, 0, 110)
+			else
+				sparks.Enabled = false
+			end
+		end
+	elseif className == "Cultivator" then
+		if speed &gt; 10 then
+			local now = tick()
+			local interval = 0.22 - math.clamp(speed * 0.0015, 0, 0.1)
+			if now - charData.LastLeafTime &gt;= interval then
+				charData.LastLeafTime = now
+				spawn3DLeaf(root.Position - targetCF.LookVector * 2.8 - Vector3.new(0, 1.5, 0), velocity)
+			end
+		end
+	elseif className == "Advocate" then
+		local trail = root:FindFirstChild("AdvocateTrail")
+		if trail then
+			if speed &gt; 12 then
+				trail.Enabled = true
+				local mult = math.clamp(speed / 70, 0.25, 1)
+				trail.WidthScale = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 1.3 * mult),
+					NumberSequenceKeypoint.new(1, 0)
+				})
+			else
+				trail.Enabled = false
+			end
+		end
+	end
+	
+	-- 5. Audio Hum adjustments
+	if sound then
+		if speed &gt; 1.5 then
+			sound.Volume = math.clamp((speed / 80) * 0.8, 0, 0.8)
+			sound.PlaybackSpeed = 0.6 + (speed / 80) * 1.4
+		else
+			sound.Volume = 0
+			sound.PlaybackSpeed = 0.6
+		end
+	end
+	
+	return true
+end
+
+-- Initialize the visuals structure
+local function setupVisuals(character, player, root, shell, shellWeld, visualMesh, className)
+	ActiveCharacters[character] = nil
+
+	-- Disable any old class emitters
+	local oldSparks = root:FindFirstChild("SparksEmitter")
+	if oldSparks then oldSparks.Enabled = false end
+	
+	local oldTrail = root:FindFirstChild("AdvocateTrail")
+	if oldTrail then oldTrail.Enabled = false end
+
+	-- Create class specific emitters
+	if className == "Economist" then
+		local sparks = root:FindFirstChild("SparksEmitter")
+		if not sparks then
+			sparks = Instance.new("ParticleEmitter")
+			sparks.Name = "SparksEmitter"
+			sparks.Color = ColorSequence.new(GameConfig.CLASSES.Economist.Color)
+			sparks.Texture = "rbxassetid://258129767"
+			sparks.Rate = 0
+			sparks.Size = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.9),
+				NumberSequenceKeypoint.new(1, 0)
+			})
+			sparks.Lifetime = NumberRange.new(0.4, 0.7)
+			sparks.Speed = NumberRange.new(6, 12)
+			sparks.SpreadAngle = Vector2.new(45, 45)
+			sparks.Acceleration = Vector3.new(0, -7, 0)
+			sparks.Drag = 1.4
+			sparks.Enabled = false
+			sparks.Parent = root
+		end
+	elseif className == "Advocate" then
+		local att0 = root:FindFirstChild("TrailAtt0")
+		if not att0 then
+			att0 = Instance.new("Attachment")
+			att0.Name = "TrailAtt0"
+			att0.Position = Vector3.new(0, -2.8, 0)
+			att0.Parent = root
+		end
+
+		local att1 = root:FindFirstChild("TrailAtt1")
+		if not att1 then
+			att1 = Instance.new("Attachment")
+			att1.Name = "TrailAtt1"
+			att1.Position = Vector3.new(0, 2.8, 0)
+			att1.Parent = root
+		end
+
+		local trail = root:FindFirstChild("AdvocateTrail")
+		if not trail then
+			trail = Instance.new("Trail")
+			trail.Name = "AdvocateTrail"
+			trail.Attachment0 = att0
+			trail.Attachment1 = att1
+			trail.Color = ColorSequence.new(GameConfig.CLASSES.Advocate.Color)
+			trail.LightEmission = 1.0
+			trail.Lifetime = 0.55
+			trail.Transparency = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 0.1),
+				NumberSequenceKeypoint.new(1, 1)
+			})
+			trail.WidthScale = NumberSequence.new({
+				NumberSequenceKeypoint.new(0, 1.2),
+				NumberSequenceKeypoint.new(1, 0)
+			})
+			trail.Enabled = false
+			trail.Parent = root
+		end
+	end
+
+	-- Create rolling sound hum
+	local hum = root:FindFirstChild("RollingHum")
+	if not hum then
+		hum = Instance.new("Sound")
+		hum.Name = "RollingHum"
+		hum.SoundId = "rbxassetid://9073172089" -- sci-fi mechanical hum
+		hum.Looped = true
+		hum.Volume = 0
+		hum.PlaybackSpeed = 0.6
+		hum.Parent = root
+		hum:Play()
+	end
+
+	-- Add to active tracking
+	ActiveCharacters[character] = {
+		Character = character,
+		Player = player,
+		Root = root,
+		Shell = shell,
+		ShellWeld = shellWeld,
+		VisualMesh = visualMesh,
+		ClassName = className,
+		Sound = hum,
+		LastVelocity = root.AssemblyLinearVelocity,
+		LastSpeed = root.AssemblyLinearVelocity.Magnitude,
+		SquashTimer = 0,
+		SquashAmount = 0,
+		SquashNormal = Vector3.new(0, 1, 0),
+		CoreAngle = math.random() * 100,
+		CoreSpinSpeed = className == "Economist" and 4.2 or (className == "Advocate" and 2.5 or 1.2),
+		LastLeafTime = 0
+	}
+end
+
+-- Track player spawner
+local function onCharacterAdded(character)
+	local player = Players:GetPlayerFromCharacter(character)
+	if not player then return end
+
+	local root = character:WaitForChild("HumanoidRootPart", 10)
+	if not root then return end
+
+	local shell = character:WaitForChild("VisualShell", 5)
+	if not shell then return end -- Normal lobby character, skip
+
+	local shellWeld = shell:WaitForChild("ShellWeld", 5)
+	local visualMesh = shell:WaitForChild("VisualMesh", 5)
+	if not shellWeld or not visualMesh then return end
+
+		-- Wait for class attribute from server
+	local className = character:GetAttribute("Class")
+	
+	character:GetAttributeChangedSignal("Class"):Connect(function()
+		local newClass = character:GetAttribute("Class")
+		if newClass then
+			setupVisuals(character, player, root, shell, shellWeld, visualMesh, newClass)
+		end
+	end)
+	
+	if className then
+		setupVisuals(character, player, root, shell, shellWeld, visualMesh, className)
+	end
+end
+
+local function monitorPlayer(player)
+	player.CharacterAdded:Connect(onCharacterAdded)
+	if player.Character then
+		task.spawn(onCharacterAdded, player.Character)
+	end
+end
+
+Players.PlayerAdded:Connect(monitorPlayer)
+for _, player in ipairs(Players:GetPlayers()) do
+	monitorPlayer(player)
+end
+
+-- Render loop updater
+RunService.RenderStepped:Connect(function(dt)
+	for character, charData in pairs(ActiveCharacters) do
+		local success, active = pcall(updateCharacterVisuals, charData, dt)
+		if not success or not active then
+			ActiveCharacters[character] = nil
+		end
+	end
+end)
+
+print("[EcoSphere] SphereVisuals initialized")</string>
+        </Properties>
+      </Item>
+    </Item>
+  </Item>
+  <Item class="Workspace" referent="34">
+    <Properties>
+      <string name="Name">Workspace</string>
+      <bool name="FilteringEnabled">true</bool>
+      <bool name="NeedsPivotMigration">false</bool>
+    </Properties>
+    <Item class="Part" referent="35">
+      <Properties>
+        <string name="Name">PlanetBase</string>
+        <bool name="Anchored">true</bool>
+        <bool name="CanCollide">true</bool>
+        <bool name="CastShadow">false</bool>
+        <Color3uint8 name="Color3uint8">2654023</Color3uint8>
+        <bool name="Locked">true</bool>
+        <token name="Material">1280</token>
+        <Vector3 name="Position">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+        </Vector3>
+        <token name="shape">0</token>
+        <Vector3 name="size">
+          <X>1024</X>
+          <Y>1024</Y>
+          <Z>1024</Z>
+        </Vector3>
+      </Properties>
+    </Item>
+  </Item>
+</roblox>

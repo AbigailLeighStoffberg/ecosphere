@@ -70,11 +70,16 @@ local progressFrame = Instance.new("Frame")
 progressFrame.Name = "ProgressFrame"
 progressFrame.AnchorPoint = Vector2.new(0.5, 1)
 progressFrame.Position = UDim2.new(0.5, 0, 1, -25)
-progressFrame.Size = UDim2.new(0, 600, 0, 130)
+progressFrame.Size = UDim2.new(0.9, 0, 0, 125) -- Responsive 90% screen width
 progressFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
 progressFrame.BackgroundTransparency = 0.1
 progressFrame.BorderSizePixel = 0
 progressFrame.Parent = screenGui
+
+-- Max width constraint so it doesn't span too wide on PC/Tablet screens
+local sizeConstraint = Instance.new("UISizeConstraint")
+sizeConstraint.MaxWidth = 580
+sizeConstraint.Parent = progressFrame
 
 local progCorner = Instance.new("UICorner")
 progCorner.CornerRadius = UDim.new(0, 18)
@@ -104,13 +109,13 @@ local barPcts = {}
 
 for i, className in ipairs(classOrder) do
 	local classData = GameConfig.CLASSES[className]
-	local yOffset = 35 + (i - 1) * 30
+	local yOffset = 35 + (i - 1) * 28
 
-	-- Class label
+	-- Class label (responsive scale)
 	local label = Instance.new("TextLabel")
 	label.Name = className .. "Label"
-	label.Size = UDim2.new(0, 120, 0, 24)
-	label.Position = UDim2.new(0, 15, 0, yOffset)
+	label.Size = UDim2.new(0.24, 0, 0, 24)
+	label.Position = UDim2.new(0.03, 0, 0, yOffset)
 	label.BackgroundTransparency = 1
 	label.Text = classData.DisplayName
 	label.TextColor3 = classData.Color
@@ -120,11 +125,11 @@ for i, className in ipairs(classOrder) do
 	label.Parent = progressFrame
 	barLabels[className] = label
 
-	-- Bar background (translucent teal glassmorphism track)
+	-- Bar background (responsive scale translucent teal track)
 	local barBg = Instance.new("Frame")
 	barBg.Name = className .. "BarBg"
-	barBg.Size = UDim2.new(0, 370, 0, 20)
-	barBg.Position = UDim2.new(0, 140, 0, yOffset + 2)
+	barBg.Size = UDim2.new(0.58, 0, 0, 16)
+	barBg.Position = UDim2.new(0.27, 0, 0, yOffset + 4)
 	barBg.BackgroundColor3 = GameConfig.Palette.PaleTeal
 	barBg.BackgroundTransparency = 0.8
 	barBg.BorderSizePixel = 0
@@ -156,11 +161,11 @@ for i, className in ipairs(classOrder) do
 	threshold.BorderSizePixel = 0
 	threshold.Parent = barBg
 
-	-- Percentage text
+	-- Percentage text (responsive scale)
 	local pctLabel = Instance.new("TextLabel")
 	pctLabel.Name = className .. "Pct"
-	pctLabel.Size = UDim2.new(0, 55, 0, 24)
-	pctLabel.Position = UDim2.new(0, 520, 0, yOffset)
+	pctLabel.Size = UDim2.new(0.1, 0, 0, 24)
+	pctLabel.Position = UDim2.new(0.87, 0, 0, yOffset)
 	pctLabel.BackgroundTransparency = 1
 	pctLabel.Text = "0%"
 	pctLabel.TextColor3 = classData.Color
@@ -239,13 +244,21 @@ stateSubtext.ZIndex = 11
 stateSubtext.Parent = stateOverlay
 
 -- ========================
--- CLASS SWITCHER UI (bottom left)
+-- CLASS SWITCHER UI (bottom left or top left)
 -- ========================
+local UIS = game:GetService("UserInputService")
 local switchFrame = Instance.new("Frame")
 switchFrame.Name = "SwitchFrame"
-switchFrame.AnchorPoint = Vector2.new(0, 1)
-switchFrame.Position = UDim2.new(0, 20, 1, -20)
-switchFrame.Size = UDim2.new(0, 220, 0, 85)
+if UIS.TouchEnabled then
+	-- Positioned at top left on mobile (below timer display, out of way of thumbstick/progress bars)
+	switchFrame.AnchorPoint = Vector2.new(0, 0)
+	switchFrame.Position = UDim2.new(0, 15, 0, 95)
+	switchFrame.Size = UDim2.new(0, 185, 0, 65)
+else
+	switchFrame.AnchorPoint = Vector2.new(0, 1)
+	switchFrame.Position = UDim2.new(0, 20, 1, -20)
+	switchFrame.Size = UDim2.new(0, 220, 0, 85)
+end
 switchFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
 switchFrame.BackgroundTransparency = 0.1
 switchFrame.BorderSizePixel = 0
@@ -266,30 +279,39 @@ switchTitle.Position = UDim2.new(0, 0, 0, 8)
 switchTitle.BackgroundTransparency = 1
 switchTitle.Text = "SWITCH CLASS"
 switchTitle.TextColor3 = GameConfig.Palette.Cream
-switchTitle.TextSize = 12
+switchTitle.TextSize = UIS.TouchEnabled and 11 or 12
 switchTitle.Font = Enum.Font.Nunito
 switchTitle.Parent = switchFrame
 
 local switchContainer = Instance.new("Frame")
-switchContainer.Size = UDim2.new(1, 0, 0, 40)
-switchContainer.Position = UDim2.new(0, 0, 0, 32)
+if UIS.TouchEnabled then
+	switchContainer.Size = UDim2.new(1, 0, 0, 36)
+	switchContainer.Position = UDim2.new(0, 0, 0, 24)
+else
+	switchContainer.Size = UDim2.new(1, 0, 0, 40)
+	switchContainer.Position = UDim2.new(0, 0, 0, 32)
+end
 switchContainer.BackgroundTransparency = 1
 switchContainer.Parent = switchFrame
 
 local switchLayout = Instance.new("UIListLayout")
 switchLayout.FillDirection = Enum.FillDirection.Horizontal
 switchLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-switchLayout.Padding = UDim.new(0, 15)
+switchLayout.Padding = UDim.new(0, UIS.TouchEnabled and 12 or 15)
 switchLayout.Parent = switchContainer
 
 local function createSwitchBtn(className, hotkey)
 	local classData = GameConfig.CLASSES[className]
 	local btn = Instance.new("TextButton")
 	btn.Name = className .. "Btn"
-	btn.Size = UDim2.new(0, 40, 0, 40)
+	if UIS.TouchEnabled then
+		btn.Size = UDim2.new(0, 34, 0, 34)
+	else
+		btn.Size = UDim2.new(0, 40, 0, 40)
+	end
 	btn.BackgroundColor3 = classData.Color
 	btn.Text = classData.Icon
-	btn.TextSize = 20
+	btn.TextSize = UIS.TouchEnabled and 16 or 20
 	btn.Font = Enum.Font.Nunito
 	btn.Parent = switchContainer
 	
@@ -297,27 +319,35 @@ local function createSwitchBtn(className, hotkey)
 	btnCorner.CornerRadius = UDim.new(1, 0)
 	btnCorner.Parent = btn
 	
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, 0, 0, 15)
-	label.Position = UDim2.new(0, 0, 1, 2)
-	label.BackgroundTransparency = 1
-	label.Text = "[" .. hotkey .. "]"
-	label.TextColor3 = GameConfig.Palette.Cream
-	label.TextSize = 12
-	label.Font = Enum.Font.Nunito
-	label.Parent = btn
+	-- Only create key labels if not on touch screen (mobile)
+	if not UIS.TouchEnabled then
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, 0, 0, 15)
+		label.Position = UDim2.new(0, 0, 1, 2)
+		label.BackgroundTransparency = 1
+		label.Text = "[" .. hotkey .. "]"
+		label.TextColor3 = GameConfig.Palette.Cream
+		label.TextSize = 12
+		label.Font = Enum.Font.Nunito
+		label.Parent = btn
+	end
 	
 	btn.MouseButton1Click:Connect(function()
 		if not _G.ClassSelected then return end
 		
-		-- In case PlanetaryMovement hotkeys are also firing, this is specifically for mouse clicks!
 		Remotes.SelectClass:FireServer(className)
 		
 		-- Simple click animation
 		local ts = game:GetService("TweenService")
-		ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 35, 0, 35)}):Play()
-		task.wait(0.1)
-		ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 40, 0, 40)}):Play()
+		if UIS.TouchEnabled then
+			ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 28, 0, 28)}):Play()
+			task.wait(0.1)
+			ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 34, 0, 34)}):Play()
+		else
+			ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 35, 0, 35)}):Play()
+			task.wait(0.1)
+			ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 40, 0, 40)}):Play()
+		end
 	end)
 end
 
@@ -432,9 +462,26 @@ Remotes.PowerupActivated.OnClientEvent:Connect(function(duration)
 	end)
 end)
 
-Remotes:WaitForChild("StartGameClient").OnClientEvent:Connect(function()
+local function enableHUD()
 	screenGui.Enabled = true
-end)
+end
+
+Remotes:WaitForChild("StartGameClient").OnClientEvent:Connect(enableHUD)
+
+-- Resolve potential race condition by checking if the class attribute is already present on load
+local function checkInitialHUDState()
+	local char = player.Character or player.CharacterAdded:Wait()
+	local function check()
+		if char:GetAttribute("Class") then
+			enableHUD()
+		end
+	end
+	check()
+	char:GetAttributeChangedSignal("Class"):Connect(check)
+end
+task.spawn(checkInitialHUDState)
+
+print("[EcoSphere] GameHUD initialized")
 
 -- ========================
 -- BOOST HUD (bottom center)
@@ -442,7 +489,8 @@ end)
 local boostBg = Instance.new("Frame")
 boostBg.Name = "BoostBg"
 boostBg.AnchorPoint = Vector2.new(0.5, 1)
-boostBg.Position = UDim2.new(0.5, 0, 1, -25)
+-- Floating dynamically above the ProgressFrame (which spans from 1, -25 with height 125)
+boostBg.Position = UDim2.new(0.5, 0, 1, -160)
 boostBg.Size = UDim2.new(0, 180, 0, 8)
 boostBg.BackgroundColor3 = GameConfig.Palette.DarkTeal
 boostBg.BackgroundTransparency = 0.5
@@ -470,7 +518,7 @@ boostText.AnchorPoint = Vector2.new(0.5, 1)
 boostText.Position = UDim2.new(0.5, 0, 0, -4)
 boostText.Size = UDim2.new(1, 0, 0, 20)
 boostText.BackgroundTransparency = 1
-boostText.Text = "SHIFT TO BOOST"
+boostText.Text = UIS.TouchEnabled and "BOOST" or "SHIFT TO BOOST"
 boostText.TextColor3 = Color3.new(1,1,1)
 boostText.Font = Enum.Font.Nunito
 boostText.TextSize = 12
@@ -489,7 +537,7 @@ RunService.RenderStepped:Connect(function()
 	else
 		boostFill.Size = UDim2.new(1, 0, 1, 0)
 		boostFill.BackgroundColor3 = GameConfig.Palette.SoftBlue
-		boostText.Text = "SHIFT TO BOOST"
+		boostText.Text = UIS.TouchEnabled and "BOOST READY" or "SHIFT TO BOOST"
 	end
 end)
 

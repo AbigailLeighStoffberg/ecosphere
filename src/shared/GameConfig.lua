@@ -79,7 +79,7 @@ GameConfig.WIN_THRESHOLD = 0.80 -- 80%
 GameConfig.GRID_RESOLUTION = 80 -- subdivisions per axis for coverage grid
 
 -- Match / Teleport
-GameConfig.MATCH_PLACE_ID = 0 -- SET THIS to your Match Place ID after creating it in Game Explorer
+GameConfig.MATCH_PLACE_ID = 137287010882090 -- Using single-place matchmaking (main place ID)
 GameConfig.COUNTDOWN_DURATION = 5 -- seconds countdown before teleporting from pad
 GameConfig.RETURN_TO_LOBBY_DELAY = 10 -- seconds after match ends before returning to lobby
 GameConfig.MATCH_LOAD_TIMEOUT = 30 -- seconds to wait for players to arrive on match server

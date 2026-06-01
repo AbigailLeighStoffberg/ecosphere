@@ -1,0 +1,93 @@
+{
+  "name": "ecosphere-match",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "$ignoreUnknownInstances": true,
+      "GameConfig": {
+        "$path": "src/shared/GameConfig.lua"
+      },
+      "Hello": {
+        "$path": "src/shared/Hello.luau"
+      },
+      "Remotes": {
+        "$className": "Folder",
+        "StartGameClient": { "$className": "RemoteEvent" },
+        "PaintTrail": { "$className": "RemoteEvent" },
+        "PowerupActivated": { "$className": "RemoteEvent" },
+        "UpdateProgress": { "$className": "RemoteEvent" },
+        "SelectClass": { "$className": "RemoteEvent" },
+        "GameStateChanged": { "$className": "RemoteEvent" },
+        "CoinCollected": { "$className": "RemoteEvent" },
+        "QueueUpdate": { "$className": "RemoteEvent" },
+        "ReturnToLobby": { "$className": "RemoteEvent" }
+      },
+      "SphereCharacter": {
+        "$className": "Model",
+        "HumanoidRootPart": {
+          "$className": "Part",
+          "$properties": {
+            "Shape": "Ball",
+            "Size": [2, 2, 2],
+            "CanCollide": true,
+            "Massless": true,
+            "Transparency": 1
+          }
+        }
+      }
+    },
+
+    "ServerScriptService": {
+      "$ignoreUnknownInstances": true,
+      "$path": "src/server"
+    },
+
+    "StarterPlayer": {
+      "$ignoreUnknownInstances": true,
+      "StarterPlayerScripts": {
+        "$ignoreUnknownInstances": true,
+        "$path": "src/client"
+      }
+    },
+
+    "Workspace": {
+      "$ignoreUnknownInstances": true,
+      "$properties": {
+        "FilteringEnabled": true
+      },
+      "PlanetBase": {
+        "$className": "Part",
+        "$properties": {
+          "Shape": "Ball",
+          "Anchored": true,
+          "CanCollide": true,
+          "Locked": true,
+          "Size": [1024, 1024, 1024],
+          "Position": [0, 0, 0],
+          "Color": [0.15686, 0.49803, 0.27843],
+          "Material": "Grass",
+          "CastShadow": false
+        }
+      }
+    },
+
+    "Lighting": {
+      "$ignoreUnknownInstances": true,
+      "$properties": {
+        "Ambient": [0, 0, 0],
+        "Brightness": 2,
+        "GlobalShadows": true,
+        "Outlines": false,
+        "Technology": "Voxel"
+      }
+    },
+
+    "SoundService": {
+      "$ignoreUnknownInstances": true,
+      "$properties": {
+        "RespectFilteringEnabled": true
+      }
+    }
+  }
+}

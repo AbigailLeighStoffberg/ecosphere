@@ -28,16 +28,26 @@ screenGui.Parent = playerGui
 -- ========================
 -- QUEUE STATUS PANEL (bottom center)
 -- ========================
+local UIS = game:GetService("UserInputService")
 local queueFrame = Instance.new("Frame")
 queueFrame.Name = "QueueFrame"
 queueFrame.AnchorPoint = Vector2.new(0.5, 1)
-queueFrame.Position = UDim2.new(0.5, 0, 1, -30)
-queueFrame.Size = UDim2.new(0, 320, 0, 90)
+if UIS.TouchEnabled then
+	-- Float higher on mobile touch screens to avoid overlap with thumbsticks/mobile buttons
+	queueFrame.Position = UDim2.new(0.5, 0, 1, -120)
+else
+	queueFrame.Position = UDim2.new(0.5, 0, 1, -30)
+end
+queueFrame.Size = UDim2.new(0.9, 0, 0, 90) -- Responsive width
 queueFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
 queueFrame.BackgroundTransparency = 0.15
 queueFrame.BorderSizePixel = 0
 queueFrame.Visible = false
 queueFrame.Parent = screenGui
+
+local sizeConstraint = Instance.new("UISizeConstraint")
+sizeConstraint.MaxWidth = 320
+sizeConstraint.Parent = queueFrame
 
 local queueCorner = Instance.new("UICorner")
 queueCorner.CornerRadius = UDim.new(0, 16)
