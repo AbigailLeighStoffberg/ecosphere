@@ -16,7 +16,7 @@ screenGui.Name = "GameHUD"
 screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-screenGui.Enabled = false -- Hide HUD in the lobby initially
+screenGui.Enabled = true -- Always display the HUD!
 screenGui.Parent = playerGui
 
 -- ========================
@@ -26,14 +26,14 @@ local timerFrame = Instance.new("Frame")
 timerFrame.Name = "TimerFrame"
 timerFrame.AnchorPoint = Vector2.new(0.5, 0)
 timerFrame.Position = UDim2.new(0.5, 0, 0, 20)
-timerFrame.Size = UDim2.new(0, 180, 0, 60)
+timerFrame.Size = UDim2.new(0, 130, 0, 50)
 timerFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
 timerFrame.BackgroundTransparency = 0.1
 timerFrame.BorderSizePixel = 0
 timerFrame.Parent = screenGui
 
 local timerCorner = Instance.new("UICorner")
-timerCorner.CornerRadius = UDim.new(0, 16)
+timerCorner.CornerRadius = UDim.new(0, 12)
 timerCorner.Parent = timerFrame
 
 local timerStroke = Instance.new("UIStroke")
@@ -43,46 +43,41 @@ timerStroke.Parent = timerFrame
 
 local timerLabel = Instance.new("TextLabel")
 timerLabel.Name = "TimerLabel"
-timerLabel.Size = UDim2.new(1, 0, 0, 18)
-timerLabel.Position = UDim2.new(0, 0, 0, 6)
+timerLabel.Size = UDim2.new(1, 0, 0, 12)
+timerLabel.Position = UDim2.new(0, 0, 0, 4)
 timerLabel.BackgroundTransparency = 1
 timerLabel.Text = "TIME REMAINING"
 timerLabel.TextColor3 = GameConfig.Palette.Cream
-timerLabel.TextSize = 11
+timerLabel.TextSize = 9
 timerLabel.Font = Enum.Font.Nunito
 timerLabel.Parent = timerFrame
 
 local timerValue = Instance.new("TextLabel")
 timerValue.Name = "TimerValue"
-timerValue.Size = UDim2.new(1, 0, 0, 32)
-timerValue.Position = UDim2.new(0, 0, 0, 24)
+timerValue.Size = UDim2.new(1, 0, 0, 28)
+timerValue.Position = UDim2.new(0, 0, 0, 18)
 timerValue.BackgroundTransparency = 1
 timerValue.Text = "1:00"
 timerValue.TextColor3 = Color3.fromRGB(255, 255, 255)
-timerValue.TextSize = 28
+timerValue.TextSize = 22
 timerValue.Font = Enum.Font.Nunito
 timerValue.Parent = timerFrame
 
 -- ========================
--- PROGRESS BARS (bottom center)
+-- PROGRESS BARS (compact top right)
 -- ========================
 local progressFrame = Instance.new("Frame")
 progressFrame.Name = "ProgressFrame"
-progressFrame.AnchorPoint = Vector2.new(0.5, 1)
-progressFrame.Position = UDim2.new(0.5, 0, 1, -25)
-progressFrame.Size = UDim2.new(0.9, 0, 0, 125) -- Responsive 90% screen width
+progressFrame.AnchorPoint = Vector2.new(1, 0)
+progressFrame.Position = UDim2.new(1, -20, 0, 20)
+progressFrame.Size = UDim2.new(0, 240, 0, 105) -- Compact size
 progressFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
 progressFrame.BackgroundTransparency = 0.1
 progressFrame.BorderSizePixel = 0
 progressFrame.Parent = screenGui
 
--- Max width constraint so it doesn't span too wide on PC/Tablet screens
-local sizeConstraint = Instance.new("UISizeConstraint")
-sizeConstraint.MaxWidth = 580
-sizeConstraint.Parent = progressFrame
-
 local progCorner = Instance.new("UICorner")
-progCorner.CornerRadius = UDim.new(0, 18)
+progCorner.CornerRadius = UDim.new(0, 14)
 progCorner.Parent = progressFrame
 
 local progStroke = Instance.new("UIStroke")
@@ -92,12 +87,12 @@ progStroke.Parent = progressFrame
 
 -- Title
 local progTitle = Instance.new("TextLabel")
-progTitle.Size = UDim2.new(1, 0, 0, 25)
-progTitle.Position = UDim2.new(0, 0, 0, 8)
+progTitle.Size = UDim2.new(1, 0, 0, 20)
+progTitle.Position = UDim2.new(0, 0, 0, 4)
 progTitle.BackgroundTransparency = 1
-progTitle.Text = "ECOSPHERE HARMONY"
+progTitle.Text = "HARMONY PROGRESS"
 progTitle.TextColor3 = GameConfig.Palette.Cream
-progTitle.TextSize = 13
+progTitle.TextSize = 11
 progTitle.Font = Enum.Font.Nunito
 progTitle.Parent = progressFrame
 
@@ -109,34 +104,34 @@ local barPcts = {}
 
 for i, className in ipairs(classOrder) do
 	local classData = GameConfig.CLASSES[className]
-	local yOffset = 35 + (i - 1) * 28
+	local yOffset = 22 + (i - 1) * 25
 
-	-- Class label (responsive scale)
+	-- Class label (compact)
 	local label = Instance.new("TextLabel")
 	label.Name = className .. "Label"
-	label.Size = UDim2.new(0.24, 0, 0, 24)
-	label.Position = UDim2.new(0.03, 0, 0, yOffset)
+	label.Size = UDim2.new(0, 75, 0, 20)
+	label.Position = UDim2.new(0, 10, 0, yOffset)
 	label.BackgroundTransparency = 1
 	label.Text = classData.DisplayName
 	label.TextColor3 = classData.Color
-	label.TextSize = 13
+	label.TextSize = 10
 	label.Font = Enum.Font.Nunito
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.Parent = progressFrame
 	barLabels[className] = label
 
-	-- Bar background (responsive scale translucent teal track)
+	-- Bar background (slender)
 	local barBg = Instance.new("Frame")
 	barBg.Name = className .. "BarBg"
-	barBg.Size = UDim2.new(0.58, 0, 0, 16)
-	barBg.Position = UDim2.new(0.27, 0, 0, yOffset + 4)
+	barBg.Size = UDim2.new(0, 110, 0, 10)
+	barBg.Position = UDim2.new(0, 90, 0, yOffset + 5)
 	barBg.BackgroundColor3 = GameConfig.Palette.PaleTeal
 	barBg.BackgroundTransparency = 0.8
 	barBg.BorderSizePixel = 0
 	barBg.Parent = progressFrame
 
 	local barBgCorner = Instance.new("UICorner")
-	barBgCorner.CornerRadius = UDim.new(0, 10)
+	barBgCorner.CornerRadius = UDim.new(0, 5)
 	barBgCorner.Parent = barBg
 
 	-- Bar fill (chunky, springy)
@@ -148,28 +143,28 @@ for i, className in ipairs(classOrder) do
 	barFill.Parent = barBg
 
 	local fillCorner = Instance.new("UICorner")
-	fillCorner.CornerRadius = UDim.new(0, 10)
+	fillCorner.CornerRadius = UDim.new(0, 5)
 	fillCorner.Parent = barFill
 
 	-- 80% threshold marker
 	local threshold = Instance.new("Frame")
 	threshold.Name = "Threshold"
-	threshold.Size = UDim2.new(0, 2, 1, 4)
-	threshold.Position = UDim2.new(0.8, 0, 0, -2)
+	threshold.Size = UDim2.new(0, 2, 1, 2)
+	threshold.Position = UDim2.new(0.8, 0, 0, -1)
 	threshold.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 	threshold.BackgroundTransparency = 0.4
 	threshold.BorderSizePixel = 0
 	threshold.Parent = barBg
 
-	-- Percentage text (responsive scale)
+	-- Percentage text (compact)
 	local pctLabel = Instance.new("TextLabel")
 	pctLabel.Name = className .. "Pct"
-	pctLabel.Size = UDim2.new(0.1, 0, 0, 24)
-	pctLabel.Position = UDim2.new(0.87, 0, 0, yOffset)
+	pctLabel.Size = UDim2.new(0, 30, 0, 20)
+	pctLabel.Position = UDim2.new(0, 205, 0, yOffset)
 	pctLabel.BackgroundTransparency = 1
 	pctLabel.Text = "0%"
 	pctLabel.TextColor3 = classData.Color
-	pctLabel.TextSize = 14
+	pctLabel.TextSize = 10
 	pctLabel.Font = Enum.Font.Nunito
 	pctLabel.TextXAlignment = Enum.TextXAlignment.Right
 	pctLabel.Parent = progressFrame
@@ -244,28 +239,21 @@ stateSubtext.ZIndex = 11
 stateSubtext.Parent = stateOverlay
 
 -- ========================
--- CLASS SWITCHER UI (bottom left or top left)
+-- CLASS SWITCHER UI (top left)
 -- ========================
 local UIS = game:GetService("UserInputService")
 local switchFrame = Instance.new("Frame")
 switchFrame.Name = "SwitchFrame"
-if UIS.TouchEnabled then
-	-- Positioned at top left on mobile (below timer display, out of way of thumbstick/progress bars)
-	switchFrame.AnchorPoint = Vector2.new(0, 0)
-	switchFrame.Position = UDim2.new(0, 15, 0, 95)
-	switchFrame.Size = UDim2.new(0, 185, 0, 65)
-else
-	switchFrame.AnchorPoint = Vector2.new(0, 1)
-	switchFrame.Position = UDim2.new(0, 20, 1, -20)
-	switchFrame.Size = UDim2.new(0, 220, 0, 85)
-end
+switchFrame.AnchorPoint = Vector2.new(0, 0)
+switchFrame.Position = UDim2.new(0, 20, 0, 75) -- Shifted down to clear Roblox's default top-left menu bar
+switchFrame.Size = UDim2.new(0, 160, 0, 65) -- Compact size
 switchFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
 switchFrame.BackgroundTransparency = 0.1
 switchFrame.BorderSizePixel = 0
 switchFrame.Parent = screenGui
 
 local switchCorner = Instance.new("UICorner")
-switchCorner.CornerRadius = UDim.new(0, 16)
+switchCorner.CornerRadius = UDim.new(0, 12)
 switchCorner.Parent = switchFrame
 
 local switchStroke = Instance.new("UIStroke")
@@ -274,44 +262,35 @@ switchStroke.Thickness = 2
 switchStroke.Parent = switchFrame
 
 local switchTitle = Instance.new("TextLabel")
-switchTitle.Size = UDim2.new(1, 0, 0, 20)
-switchTitle.Position = UDim2.new(0, 0, 0, 8)
+switchTitle.Size = UDim2.new(1, 0, 0, 15)
+switchTitle.Position = UDim2.new(0, 0, 0, 4)
 switchTitle.BackgroundTransparency = 1
 switchTitle.Text = "SWITCH CLASS"
 switchTitle.TextColor3 = GameConfig.Palette.Cream
-switchTitle.TextSize = UIS.TouchEnabled and 11 or 12
+switchTitle.TextSize = 10
 switchTitle.Font = Enum.Font.Nunito
 switchTitle.Parent = switchFrame
 
 local switchContainer = Instance.new("Frame")
-if UIS.TouchEnabled then
-	switchContainer.Size = UDim2.new(1, 0, 0, 36)
-	switchContainer.Position = UDim2.new(0, 0, 0, 24)
-else
-	switchContainer.Size = UDim2.new(1, 0, 0, 40)
-	switchContainer.Position = UDim2.new(0, 0, 0, 32)
-end
+switchContainer.Size = UDim2.new(1, 0, 0, 34)
+switchContainer.Position = UDim2.new(0, 0, 0, 22)
 switchContainer.BackgroundTransparency = 1
 switchContainer.Parent = switchFrame
 
 local switchLayout = Instance.new("UIListLayout")
 switchLayout.FillDirection = Enum.FillDirection.Horizontal
 switchLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-switchLayout.Padding = UDim.new(0, UIS.TouchEnabled and 12 or 15)
+switchLayout.Padding = UDim.new(0, 10)
 switchLayout.Parent = switchContainer
 
 local function createSwitchBtn(className, hotkey)
 	local classData = GameConfig.CLASSES[className]
 	local btn = Instance.new("TextButton")
 	btn.Name = className .. "Btn"
-	if UIS.TouchEnabled then
-		btn.Size = UDim2.new(0, 34, 0, 34)
-	else
-		btn.Size = UDim2.new(0, 40, 0, 40)
-	end
+	btn.Size = UDim2.new(0, 34, 0, 34)
 	btn.BackgroundColor3 = classData.Color
 	btn.Text = classData.Icon
-	btn.TextSize = UIS.TouchEnabled and 16 or 20
+	btn.TextSize = 16
 	btn.Font = Enum.Font.Nunito
 	btn.Parent = switchContainer
 	
@@ -322,12 +301,12 @@ local function createSwitchBtn(className, hotkey)
 	-- Only create key labels if not on touch screen (mobile)
 	if not UIS.TouchEnabled then
 		local label = Instance.new("TextLabel")
-		label.Size = UDim2.new(1, 0, 0, 15)
+		label.Size = UDim2.new(1, 0, 0, 12)
 		label.Position = UDim2.new(0, 0, 1, 2)
 		label.BackgroundTransparency = 1
 		label.Text = "[" .. hotkey .. "]"
 		label.TextColor3 = GameConfig.Palette.Cream
-		label.TextSize = 12
+		label.TextSize = 9
 		label.Font = Enum.Font.Nunito
 		label.Parent = btn
 	end
@@ -339,15 +318,9 @@ local function createSwitchBtn(className, hotkey)
 		
 		-- Simple click animation
 		local ts = game:GetService("TweenService")
-		if UIS.TouchEnabled then
-			ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 28, 0, 28)}):Play()
-			task.wait(0.1)
-			ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 34, 0, 34)}):Play()
-		else
-			ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 35, 0, 35)}):Play()
-			task.wait(0.1)
-			ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 40, 0, 40)}):Play()
-		end
+		ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 28, 0, 28)}):Play()
+		task.wait(0.1)
+		ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 34, 0, 34)}):Play()
 	end)
 end
 
@@ -489,9 +462,8 @@ print("[EcoSphere] GameHUD initialized")
 local boostBg = Instance.new("Frame")
 boostBg.Name = "BoostBg"
 boostBg.AnchorPoint = Vector2.new(0.5, 1)
--- Floating dynamically above the ProgressFrame (which spans from 1, -25 with height 125)
-boostBg.Position = UDim2.new(0.5, 0, 1, -160)
-boostBg.Size = UDim2.new(0, 180, 0, 8)
+boostBg.Position = UDim2.new(0.5, 0, 1, -25) -- Floating at bottom center
+boostBg.Size = UDim2.new(0, 160, 0, 6) -- Subtle thin bar
 boostBg.BackgroundColor3 = GameConfig.Palette.DarkTeal
 boostBg.BackgroundTransparency = 0.5
 boostBg.BorderSizePixel = 0
@@ -516,13 +488,18 @@ local boostText = Instance.new("TextLabel")
 boostText.Name = "BoostText"
 boostText.AnchorPoint = Vector2.new(0.5, 1)
 boostText.Position = UDim2.new(0.5, 0, 0, -4)
-boostText.Size = UDim2.new(1, 0, 0, 20)
+boostText.Size = UDim2.new(1, 0, 0, 18)
 boostText.BackgroundTransparency = 1
 boostText.Text = UIS.TouchEnabled and "BOOST" or "SHIFT TO BOOST"
 boostText.TextColor3 = Color3.new(1,1,1)
 boostText.Font = Enum.Font.Nunito
-boostText.TextSize = 12
+boostText.TextSize = 12 -- Increased for legibility
 boostText.Parent = boostBg
+
+local boostTextStroke = Instance.new("UIStroke")
+boostTextStroke.Color = Color3.new(0, 0, 0)
+boostTextStroke.Thickness = 2
+boostTextStroke.Parent = boostText
 
 RunService.RenderStepped:Connect(function()
 	local player = Players.LocalPlayer

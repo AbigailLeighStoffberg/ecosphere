@@ -158,16 +158,31 @@ local ROLL_SPEED = GameConfig.ROLL_SPEED
 local renderConn
 local mobileControlsGui = nil
 
--- Clean up mobile buttons
+-- Clean up mobile buttons and restore default Roblox controls
 local function removeMobileControls()
 	if mobileControlsGui then
 		mobileControlsGui:Destroy()
 		mobileControlsGui = nil
 	end
+	
+	-- Restore default Roblox mobile jump button when exiting match
+	local playerGui = player:FindFirstChild("PlayerGui")
+	if playerGui then
+		local touchGui = playerGui:FindFirstChild("TouchGui")
+		if touchGui then
+			local touchFrame = touchGui:FindFirstChild("TouchFrame")
+			if touchFrame then
+				local jumpButton = touchFrame:FindFirstChild("JumpButton")
+				if jumpButton then
+					jumpButton.Visible = true
+				end
+			end
+		end
+	end
 end
 
--- Create Mobile Screen Button for Boost
-local function createMobileControls(onBoostPressed)
+-- Create Mobile Screen Buttons for Jump and Boost
+local function createMobileControls(onJumpPressed, onBoostPressed)
 	removeMobileControls()
 	
 	local playerGui = player:WaitForChild("PlayerGui")
@@ -176,11 +191,49 @@ local function createMobileControls(onBoostPressed)
 	mobileControlsGui.ResetOnSpawn = false
 	mobileControlsGui.Parent = playerGui
 	
-	-- Custom Touch Boost Button (positioned next to default Roblox jump button)
+	-- Hide default Roblox mobile jump button (we draw our own in the same spot that works with PlatformStand)
+	task.spawn(function()
+		local touchGui = playerGui:WaitForChild("TouchGui", 5)
+		if touchGui then
+			local touchFrame = touchGui:WaitForChild("TouchFrame", 5)
+			if touchFrame then
+				local jumpButton = touchFrame:WaitForChild("JumpButton", 5)
+				if jumpButton then
+					jumpButton.Visible = false
+				end
+			end
+		end
+	end)
+	
+	-- Custom Touch Jump Button (positioned in default jump button area)
+	local jumpBtn = Instance.new("TextButton")
+	jumpBtn.Name = "JumpButton"
+	jumpBtn.Size = UDim2.new(0, 70, 0, 70)
+	jumpBtn.Position = UDim2.new(1, -90, 1, -90) -- Default Roblox jump button spot
+	jumpBtn.AnchorPoint = Vector2.new(1, 1)
+	jumpBtn.BackgroundColor3 = GameConfig.Palette.DarkTeal
+	jumpBtn.BackgroundTransparency = 0.2
+	jumpBtn.Text = "⬆"
+	jumpBtn.TextColor3 = Color3.new(1, 1, 1)
+	jumpBtn.TextSize = 28
+	jumpBtn.Font = Enum.Font.GothamBold
+	jumpBtn.Parent = mobileControlsGui
+	
+	local jumpCorner = Instance.new("UICorner")
+	jumpCorner.CornerRadius = UDim.new(1, 0)
+	jumpCorner.Parent = jumpBtn
+	
+	local jumpStroke = Instance.new("UIStroke")
+	jumpStroke.Color = GameConfig.Palette.PaleTeal
+	jumpStroke.Thickness = 2
+	jumpStroke.Parent = jumpBtn
+	
+	-- Custom Touch Boost Button (positioned left of Jump button)
 	local boostBtn = Instance.new("TextButton")
 	boostBtn.Name = "BoostButton"
 	boostBtn.Size = UDim2.new(0, 60, 0, 60)
-	boostBtn.Position = UDim2.new(1, -195, 1, -135) -- Spaced to the left of default jump button
+	boostBtn.Position = UDim2.new(1, -175, 1, -95) -- Spaced to the left of Jump button
+	boostBtn.AnchorPoint = Vector2.new(1, 1)
 	boostBtn.BackgroundColor3 = GameConfig.Palette.DarkTeal
 	boostBtn.BackgroundTransparency = 0.2
 	boostBtn.Text = "⚡"
@@ -199,6 +252,18 @@ local function createMobileControls(onBoostPressed)
 	boostStroke.Parent = boostBtn
 	
 	-- Wire up touch events
+	jumpBtn.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			onJumpPressed()
+			jumpBtn.BackgroundTransparency = 0.4
+		end
+	end)
+	jumpBtn.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			jumpBtn.BackgroundTransparency = 0.2
+		end
+	end)
+	
 	boostBtn.InputBegan:Connect(function(input)
 		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
 			onBoostPressed()
@@ -260,9 +325,28 @@ local function onCharacterAdded(character)
 	local gravityForce = rootPart:WaitForChild("PlanetGravity", 5)
 	if not gravityForce then 
 		warn("[PM-DEBUG] PlanetGravity not found, this character is not a sphere")
+		-- Make sure Lobby BillboardGuis are visible in the lobby
+		local lobby = Workspace:FindFirstChild("Lobby")
+		if lobby then
+			for _, desc in ipairs(lobby:GetDescendants()) do
+				if desc:IsA("BillboardGui") then
+					desc.Enabled = true
+				end
+			end
+		end
 		return 
 	end
-	
+
+	-- Hide all Lobby BillboardGuis (Solo/Duo/Trio mode cards) when in game mode
+	local lobby = Workspace:FindFirstChild("Lobby")
+	if lobby then
+		for _, desc in ipairs(lobby:GetDescendants()) do
+			if desc:IsA("BillboardGui") then
+				desc.Enabled = false
+			end
+		end
+	end
+
 	local rollTorque = rootPart:WaitForChild("RollTorque", 5)
 	if not rollTorque then 
 		warn("[PM-DEBUG] RollTorque not found!")
@@ -364,7 +448,7 @@ local function onCharacterAdded(character)
 
 	-- Create mobile controls if on touch device
 	if UIS.TouchEnabled then
-		createMobileControls(triggerBoost)
+		createMobileControls(triggerJump, triggerBoost)
 	end
 
 	local lastPaintTime = 0

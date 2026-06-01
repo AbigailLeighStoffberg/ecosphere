@@ -310,18 +310,15 @@ Remotes.PaintTrail.OnServerEvent:Connect(function(player, position, normal)
 	local dirFromCenter = (position - GameConfig.PLANET_CENTER).Unit
 	local surfacePos = GameConfig.PLANET_CENTER + dirFromCenter * (GameConfig.PLANET_RADIUS + 0.45)
 
-	-- Update coverage grid
+	-- Update coverage grid based on paint size
 	local tIdx, pIdx = posToGrid(surfacePos)
-	coverageGrid[tIdx][pIdx] = className
-
-	-- Also mark nearby cells for larger paint
-	if paintSize > GameConfig.PAINT_SIZE_DEFAULT then
-		for dt = -1, 1 do
-			for dp = -1, 1 do
-				local nt = math.clamp(tIdx + dt, 1, RES)
-				local np = math.clamp(pIdx + dp, 1, RES)
-				coverageGrid[nt][np] = className
-			end
+	local radius = math.max(1, math.floor(paintSize / 5.5)) -- Proportional to visual size (radius 2 for 12, radius 5 for 28)
+	
+	for dt = -radius, radius do
+		for dp = -radius, radius do
+			local nt = (tIdx + dt - 1) % RES + 1 -- wrap theta circularly [0, 2pi]
+			local np = math.clamp(pIdx + dp, 1, RES) -- clamp phi pole-to-pole [0, pi]
+			coverageGrid[nt][np] = className
 		end
 	end
 
