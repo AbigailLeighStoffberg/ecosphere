@@ -101,7 +101,7 @@ GameConfig.WIN_THRESHOLD = 0.80 -- 80%
 GameConfig.GRID_RESOLUTION = 80 -- subdivisions per axis for coverage grid
 
 -- Match / Teleport
-GameConfig.MATCH_PLACE_ID = 0 -- SET THIS to your Match Place ID after creating it in Game Explorer
+GameConfig.MATCH_PLACE_ID = 137287010882090 -- Using single-place matchmaking (main place ID)
 GameConfig.COUNTDOWN_DURATION = 5 -- seconds countdown before teleporting from pad
 GameConfig.RETURN_TO_LOBBY_DELAY = 10 -- seconds after match ends before returning to lobby
 GameConfig.MATCH_LOAD_TIMEOUT = 30 -- seconds to wait for players to arrive on match server
@@ -1907,18 +1907,15 @@ Remotes.PaintTrail.OnServerEvent:Connect(function(player, position, normal)
 	local dirFromCenter = (position - GameConfig.PLANET_CENTER).Unit
 	local surfacePos = GameConfig.PLANET_CENTER + dirFromCenter * (GameConfig.PLANET_RADIUS + 0.45)
 
-	-- Update coverage grid
+	-- Update coverage grid based on paint size
 	local tIdx, pIdx = posToGrid(surfacePos)
-	coverageGrid[tIdx][pIdx] = className
-
-	-- Also mark nearby cells for larger paint
-	if paintSize &gt; GameConfig.PAINT_SIZE_DEFAULT then
-		for dt = -1, 1 do
-			for dp = -1, 1 do
-				local nt = math.clamp(tIdx + dt, 1, RES)
-				local np = math.clamp(pIdx + dp, 1, RES)
-				coverageGrid[nt][np] = className
-			end
+	local radius = math.max(1, math.floor(paintSize / 5.5)) -- Proportional to visual size (radius 2 for 12, radius 5 for 28)
+	
+	for dt = -radius, radius do
+		for dp = -radius, radius do
+			local nt = (tIdx + dt - 1) % RES + 1 -- wrap theta circularly [0, 2pi]
+			local np = math.clamp(pIdx + dp, 1, RES) -- clamp phi pole-to-pole [0, pi]
+			coverageGrid[nt][np] = className
 		end
 	end
 
@@ -2111,8 +2108,23 @@ print("[EcoSphere] CoinClient initialized")
 local Players = game:GetService("Players")
 local RS = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 local GameConfig = require(RS:WaitForChild("GameConfig"))
 local Remotes = RS:WaitForChild("Remotes")
+
+-- Skip on lobby servers/places
+local isLobby = false
+if workspace:FindFirstChild("Lobby") then
+	isLobby = true
+elseif not workspace:FindFirstChild("PlanetBase") then
+	-- Fallback check in case of replication delay
+	isLobby = (workspace:WaitForChild("Lobby", 1.5) ~= nil)
+end
+
+if isLobby then
+	print("[EcoSphere] GameHUD: Skipped initialization in the lobby")
+	return
+end
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -2135,14 +2147,14 @@ local timerFrame = Instance.new("Frame")
 timerFrame.Name = "TimerFrame"
 timerFrame.AnchorPoint = Vector2.new(0.5, 0)
 timerFrame.Position = UDim2.new(0.5, 0, 0, 20)
-timerFrame.Size = UDim2.new(0, 180, 0, 60)
+timerFrame.Size = UDim2.new(0, 130, 0, 50)
 timerFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
 timerFrame.BackgroundTransparency = 0.1
 timerFrame.BorderSizePixel = 0
 timerFrame.Parent = screenGui
 
 local timerCorner = Instance.new("UICorner")
-timerCorner.CornerRadius = UDim.new(0, 16)
+timerCorner.CornerRadius = UDim.new(0, 12)
 timerCorner.Parent = timerFrame
 
 local timerStroke = Instance.new("UIStroke")
@@ -2152,41 +2164,41 @@ timerStroke.Parent = timerFrame
 
 local timerLabel = Instance.new("TextLabel")
 timerLabel.Name = "TimerLabel"
-timerLabel.Size = UDim2.new(1, 0, 0, 18)
-timerLabel.Position = UDim2.new(0, 0, 0, 6)
+timerLabel.Size = UDim2.new(1, 0, 0, 12)
+timerLabel.Position = UDim2.new(0, 0, 0, 4)
 timerLabel.BackgroundTransparency = 1
 timerLabel.Text = "TIME REMAINING"
 timerLabel.TextColor3 = GameConfig.Palette.Cream
-timerLabel.TextSize = 11
+timerLabel.TextSize = 9
 timerLabel.Font = Enum.Font.Nunito
 timerLabel.Parent = timerFrame
 
 local timerValue = Instance.new("TextLabel")
 timerValue.Name = "TimerValue"
-timerValue.Size = UDim2.new(1, 0, 0, 32)
-timerValue.Position = UDim2.new(0, 0, 0, 24)
+timerValue.Size = UDim2.new(1, 0, 0, 28)
+timerValue.Position = UDim2.new(0, 0, 0, 18)
 timerValue.BackgroundTransparency = 1
 timerValue.Text = "1:00"
 timerValue.TextColor3 = Color3.fromRGB(255, 255, 255)
-timerValue.TextSize = 28
+timerValue.TextSize = 22
 timerValue.Font = Enum.Font.Nunito
 timerValue.Parent = timerFrame
 
 -- ========================
--- PROGRESS BARS (bottom center)
+-- PROGRESS BARS (compact top right)
 -- ========================
 local progressFrame = Instance.new("Frame")
 progressFrame.Name = "ProgressFrame"
-progressFrame.AnchorPoint = Vector2.new(0.5, 1)
-progressFrame.Position = UDim2.new(0.5, 0, 1, -25)
-progressFrame.Size = UDim2.new(0, 600, 0, 130)
+progressFrame.AnchorPoint = Vector2.new(1, 0)
+progressFrame.Position = UDim2.new(1, -20, 0, 20)
+progressFrame.Size = UDim2.new(0, 240, 0, 105) -- Compact size
 progressFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
 progressFrame.BackgroundTransparency = 0.1
 progressFrame.BorderSizePixel = 0
 progressFrame.Parent = screenGui
 
 local progCorner = Instance.new("UICorner")
-progCorner.CornerRadius = UDim.new(0, 18)
+progCorner.CornerRadius = UDim.new(0, 14)
 progCorner.Parent = progressFrame
 
 local progStroke = Instance.new("UIStroke")
@@ -2196,12 +2208,12 @@ progStroke.Parent = progressFrame
 
 -- Title
 local progTitle = Instance.new("TextLabel")
-progTitle.Size = UDim2.new(1, 0, 0, 25)
-progTitle.Position = UDim2.new(0, 0, 0, 8)
+progTitle.Size = UDim2.new(1, 0, 0, 20)
+progTitle.Position = UDim2.new(0, 0, 0, 4)
 progTitle.BackgroundTransparency = 1
-progTitle.Text = "ECOSPHERE HARMONY"
+progTitle.Text = "HARMONY PROGRESS"
 progTitle.TextColor3 = GameConfig.Palette.Cream
-progTitle.TextSize = 13
+progTitle.TextSize = 11
 progTitle.Font = Enum.Font.Nunito
 progTitle.Parent = progressFrame
 
@@ -2213,34 +2225,34 @@ local barPcts = {}
 
 for i, className in ipairs(classOrder) do
 	local classData = GameConfig.CLASSES[className]
-	local yOffset = 35 + (i - 1) * 30
+	local yOffset = 22 + (i - 1) * 25
 
-	-- Class label
+	-- Class label (compact)
 	local label = Instance.new("TextLabel")
 	label.Name = className .. "Label"
-	label.Size = UDim2.new(0, 120, 0, 24)
-	label.Position = UDim2.new(0, 15, 0, yOffset)
+	label.Size = UDim2.new(0, 75, 0, 20)
+	label.Position = UDim2.new(0, 10, 0, yOffset)
 	label.BackgroundTransparency = 1
 	label.Text = classData.DisplayName
 	label.TextColor3 = classData.Color
-	label.TextSize = 13
+	label.TextSize = 10
 	label.Font = Enum.Font.Nunito
 	label.TextXAlignment = Enum.TextXAlignment.Left
 	label.Parent = progressFrame
 	barLabels[className] = label
 
-	-- Bar background (translucent teal glassmorphism track)
+	-- Bar background (slender)
 	local barBg = Instance.new("Frame")
 	barBg.Name = className .. "BarBg"
-	barBg.Size = UDim2.new(0, 370, 0, 20)
-	barBg.Position = UDim2.new(0, 140, 0, yOffset + 2)
+	barBg.Size = UDim2.new(0, 110, 0, 10)
+	barBg.Position = UDim2.new(0, 90, 0, yOffset + 5)
 	barBg.BackgroundColor3 = GameConfig.Palette.PaleTeal
 	barBg.BackgroundTransparency = 0.8
 	barBg.BorderSizePixel = 0
 	barBg.Parent = progressFrame
 
 	local barBgCorner = Instance.new("UICorner")
-	barBgCorner.CornerRadius = UDim.new(0, 10)
+	barBgCorner.CornerRadius = UDim.new(0, 5)
 	barBgCorner.Parent = barBg
 
 	-- Bar fill (chunky, springy)
@@ -2252,28 +2264,28 @@ for i, className in ipairs(classOrder) do
 	barFill.Parent = barBg
 
 	local fillCorner = Instance.new("UICorner")
-	fillCorner.CornerRadius = UDim.new(0, 10)
+	fillCorner.CornerRadius = UDim.new(0, 5)
 	fillCorner.Parent = barFill
 
 	-- 80% threshold marker
 	local threshold = Instance.new("Frame")
 	threshold.Name = "Threshold"
-	threshold.Size = UDim2.new(0, 2, 1, 4)
-	threshold.Position = UDim2.new(0.8, 0, 0, -2)
+	threshold.Size = UDim2.new(0, 2, 1, 2)
+	threshold.Position = UDim2.new(0.8, 0, 0, -1)
 	threshold.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 	threshold.BackgroundTransparency = 0.4
 	threshold.BorderSizePixel = 0
 	threshold.Parent = barBg
 
-	-- Percentage text
+	-- Percentage text (compact)
 	local pctLabel = Instance.new("TextLabel")
 	pctLabel.Name = className .. "Pct"
-	pctLabel.Size = UDim2.new(0, 55, 0, 24)
-	pctLabel.Position = UDim2.new(0, 520, 0, yOffset)
+	pctLabel.Size = UDim2.new(0, 30, 0, 20)
+	pctLabel.Position = UDim2.new(0, 205, 0, yOffset)
 	pctLabel.BackgroundTransparency = 1
 	pctLabel.Text = "0%"
 	pctLabel.TextColor3 = classData.Color
-	pctLabel.TextSize = 14
+	pctLabel.TextSize = 10
 	pctLabel.Font = Enum.Font.Nunito
 	pctLabel.TextXAlignment = Enum.TextXAlignment.Right
 	pctLabel.Parent = progressFrame
@@ -2348,20 +2360,21 @@ stateSubtext.ZIndex = 11
 stateSubtext.Parent = stateOverlay
 
 -- ========================
--- CLASS SWITCHER UI (bottom left)
+-- CLASS SWITCHER UI (top left)
 -- ========================
+local UIS = game:GetService("UserInputService")
 local switchFrame = Instance.new("Frame")
 switchFrame.Name = "SwitchFrame"
-switchFrame.AnchorPoint = Vector2.new(0, 1)
-switchFrame.Position = UDim2.new(0, 20, 1, -20)
-switchFrame.Size = UDim2.new(0, 220, 0, 85)
+switchFrame.AnchorPoint = Vector2.new(0, 0)
+switchFrame.Position = UDim2.new(0, 20, 0, 75) -- Shifted down to clear Roblox's default top-left menu bar
+switchFrame.Size = UDim2.new(0, 160, 0, 65) -- Compact size
 switchFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
 switchFrame.BackgroundTransparency = 0.1
 switchFrame.BorderSizePixel = 0
 switchFrame.Parent = screenGui
 
 local switchCorner = Instance.new("UICorner")
-switchCorner.CornerRadius = UDim.new(0, 16)
+switchCorner.CornerRadius = UDim.new(0, 12)
 switchCorner.Parent = switchFrame
 
 local switchStroke = Instance.new("UIStroke")
@@ -2370,35 +2383,35 @@ switchStroke.Thickness = 2
 switchStroke.Parent = switchFrame
 
 local switchTitle = Instance.new("TextLabel")
-switchTitle.Size = UDim2.new(1, 0, 0, 20)
-switchTitle.Position = UDim2.new(0, 0, 0, 8)
+switchTitle.Size = UDim2.new(1, 0, 0, 15)
+switchTitle.Position = UDim2.new(0, 0, 0, 4)
 switchTitle.BackgroundTransparency = 1
 switchTitle.Text = "SWITCH CLASS"
 switchTitle.TextColor3 = GameConfig.Palette.Cream
-switchTitle.TextSize = 12
+switchTitle.TextSize = 10
 switchTitle.Font = Enum.Font.Nunito
 switchTitle.Parent = switchFrame
 
 local switchContainer = Instance.new("Frame")
-switchContainer.Size = UDim2.new(1, 0, 0, 40)
-switchContainer.Position = UDim2.new(0, 0, 0, 32)
+switchContainer.Size = UDim2.new(1, 0, 0, 34)
+switchContainer.Position = UDim2.new(0, 0, 0, 22)
 switchContainer.BackgroundTransparency = 1
 switchContainer.Parent = switchFrame
 
 local switchLayout = Instance.new("UIListLayout")
 switchLayout.FillDirection = Enum.FillDirection.Horizontal
 switchLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-switchLayout.Padding = UDim.new(0, 15)
+switchLayout.Padding = UDim.new(0, 10)
 switchLayout.Parent = switchContainer
 
 local function createSwitchBtn(className, hotkey)
 	local classData = GameConfig.CLASSES[className]
 	local btn = Instance.new("TextButton")
 	btn.Name = className .. "Btn"
-	btn.Size = UDim2.new(0, 40, 0, 40)
+	btn.Size = UDim2.new(0, 34, 0, 34)
 	btn.BackgroundColor3 = classData.Color
 	btn.Text = classData.Icon
-	btn.TextSize = 20
+	btn.TextSize = 16
 	btn.Font = Enum.Font.Nunito
 	btn.Parent = switchContainer
 	
@@ -2406,27 +2419,29 @@ local function createSwitchBtn(className, hotkey)
 	btnCorner.CornerRadius = UDim.new(1, 0)
 	btnCorner.Parent = btn
 	
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(1, 0, 0, 15)
-	label.Position = UDim2.new(0, 0, 1, 2)
-	label.BackgroundTransparency = 1
-	label.Text = "[" .. hotkey .. "]"
-	label.TextColor3 = GameConfig.Palette.Cream
-	label.TextSize = 12
-	label.Font = Enum.Font.Nunito
-	label.Parent = btn
+	-- Only create key labels if not on touch screen (mobile)
+	if not UIS.TouchEnabled then
+		local label = Instance.new("TextLabel")
+		label.Size = UDim2.new(1, 0, 0, 12)
+		label.Position = UDim2.new(0, 0, 1, 2)
+		label.BackgroundTransparency = 1
+		label.Text = "[" .. hotkey .. "]"
+		label.TextColor3 = GameConfig.Palette.Cream
+		label.TextSize = 9
+		label.Font = Enum.Font.Nunito
+		label.Parent = btn
+	end
 	
 	btn.MouseButton1Click:Connect(function()
 		if not _G.ClassSelected then return end
 		
-		-- In case PlanetaryMovement hotkeys are also firing, this is specifically for mouse clicks!
 		Remotes.SelectClass:FireServer(className)
 		
 		-- Simple click animation
 		local ts = game:GetService("TweenService")
-		ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 35, 0, 35)}):Play()
+		ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 28, 0, 28)}):Play()
 		task.wait(0.1)
-		ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 40, 0, 40)}):Play()
+		ts:Create(btn, TweenInfo.new(0.1, Enum.EasingStyle.Bounce), {Size = UDim2.new(0, 34, 0, 34)}):Play()
 	end)
 end
 
@@ -2541,9 +2556,36 @@ Remotes.PowerupActivated.OnClientEvent:Connect(function(duration)
 	end)
 end)
 
-Remotes:WaitForChild("StartGameClient").OnClientEvent:Connect(function()
+local function enableHUD()
 	screenGui.Enabled = true
-end)
+	progressFrame.Visible = true
+	switchFrame.Visible = true
+	timerFrame.Visible = true
+	boostBg.Visible = true
+end
+
+Remotes:WaitForChild("StartGameClient").OnClientEvent:Connect(enableHUD)
+
+-- Resolve potential race condition by checking if the class attribute is already present on load
+local function checkInitialHUDState()
+	local function connectCharacter(char)
+		local function check()
+			if char:GetAttribute("Class") then
+				enableHUD()
+			end
+		end
+		check()
+		char:GetAttributeChangedSignal("Class"):Connect(check)
+	end
+
+	if player.Character then
+		connectCharacter(player.Character)
+	end
+	player.CharacterAdded:Connect(connectCharacter)
+end
+task.spawn(checkInitialHUDState)
+
+print("[EcoSphere] GameHUD initialized")
 
 -- ========================
 -- BOOST HUD (bottom center)
@@ -2551,8 +2593,8 @@ end)
 local boostBg = Instance.new("Frame")
 boostBg.Name = "BoostBg"
 boostBg.AnchorPoint = Vector2.new(0.5, 1)
-boostBg.Position = UDim2.new(0.5, 0, 1, -25)
-boostBg.Size = UDim2.new(0, 180, 0, 8)
+boostBg.Position = UDim2.new(0.5, 0, 1, -25) -- Floating at bottom center
+boostBg.Size = UDim2.new(0, 160, 0, 6) -- Subtle thin bar
 boostBg.BackgroundColor3 = GameConfig.Palette.DarkTeal
 boostBg.BackgroundTransparency = 0.5
 boostBg.BorderSizePixel = 0
@@ -2577,15 +2619,21 @@ local boostText = Instance.new("TextLabel")
 boostText.Name = "BoostText"
 boostText.AnchorPoint = Vector2.new(0.5, 1)
 boostText.Position = UDim2.new(0.5, 0, 0, -4)
-boostText.Size = UDim2.new(1, 0, 0, 20)
+boostText.Size = UDim2.new(1, 0, 0, 18)
 boostText.BackgroundTransparency = 1
-boostText.Text = "SHIFT TO BOOST"
+boostText.Text = UIS.TouchEnabled and "BOOST" or "SHIFT TO BOOST"
 boostText.TextColor3 = Color3.new(1,1,1)
 boostText.Font = Enum.Font.Nunito
-boostText.TextSize = 12
+boostText.TextSize = 12 -- Increased for legibility
 boostText.Parent = boostBg
 
+local boostTextStroke = Instance.new("UIStroke")
+boostTextStroke.Color = Color3.new(0, 0, 0)
+boostTextStroke.Thickness = 2
+boostTextStroke.Parent = boostText
+
 RunService.RenderStepped:Connect(function()
+	if not screenGui.Enabled or not boostBg.Visible then return end
 	local player = Players.LocalPlayer
 	local cd = player and player:GetAttribute("BoostCooldown") or 0
 	local now = tick()
@@ -2598,7 +2646,7 @@ RunService.RenderStepped:Connect(function()
 	else
 		boostFill.Size = UDim2.new(1, 0, 1, 0)
 		boostFill.BackgroundColor3 = GameConfig.Palette.SoftBlue
-		boostText.Text = "SHIFT TO BOOST"
+		boostText.Text = UIS.TouchEnabled and "BOOST READY" or "SHIFT TO BOOST"
 	end
 end)
 
@@ -2621,6 +2669,13 @@ returnLabel.Parent = stateOverlay
 
 Remotes:WaitForChild("ReturnToLobby").OnClientEvent:Connect(function(delay)
 	if not delay then delay = 10 end
+	
+	-- Hide all match HUD elements immediately during return countdown
+	progressFrame.Visible = false
+	switchFrame.Visible = false
+	timerFrame.Visible = false
+	boostBg.Visible = false
+	
 	returnLabel.Visible = true
 
 	task.spawn(function()
@@ -2670,16 +2725,26 @@ screenGui.Parent = playerGui
 -- ========================
 -- QUEUE STATUS PANEL (bottom center)
 -- ========================
+local UIS = game:GetService("UserInputService")
 local queueFrame = Instance.new("Frame")
 queueFrame.Name = "QueueFrame"
 queueFrame.AnchorPoint = Vector2.new(0.5, 1)
-queueFrame.Position = UDim2.new(0.5, 0, 1, -30)
-queueFrame.Size = UDim2.new(0, 320, 0, 90)
+if UIS.TouchEnabled then
+	-- Float higher on mobile touch screens to avoid overlap with thumbsticks/mobile buttons
+	queueFrame.Position = UDim2.new(0.5, 0, 1, -120)
+else
+	queueFrame.Position = UDim2.new(0.5, 0, 1, -30)
+end
+queueFrame.Size = UDim2.new(0.9, 0, 0, 90) -- Responsive width
 queueFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
 queueFrame.BackgroundTransparency = 0.15
 queueFrame.BorderSizePixel = 0
 queueFrame.Visible = false
 queueFrame.Parent = screenGui
+
+local sizeConstraint = Instance.new("UISizeConstraint")
+sizeConstraint.MaxWidth = 320
+sizeConstraint.Parent = queueFrame
 
 local queueCorner = Instance.new("UICorner")
 queueCorner.CornerRadius = UDim.new(0, 16)
@@ -3226,13 +3291,21 @@ for _, data in ipairs(classShowcases) do
 	-- "Test Drive" Button
 	local btn = Instance.new("TextButton")
 	btn.Name = "TestDriveBtn"
-	btn.Size = UDim2.new(0.8, 0, 0, 28)
-	btn.Position = UDim2.new(0.1, 0, 0.72, 0)
 	btn.BackgroundColor3 = data.Color
 	btn.Text = "⚡ TEST DRIVE TRAIL"
 	btn.TextColor3 = GameConfig.Palette.DarkTeal
-	btn.TextSize = 11
 	btn.Font = Enum.Font.Nunito
+	
+	local UIS = game:GetService("UserInputService")
+	if UIS.TouchEnabled then
+		btn.Size = UDim2.new(0.85, 0, 0, 36)
+		btn.Position = UDim2.new(0.075, 0, 0.68, 0)
+		btn.TextSize = 12
+	else
+		btn.Size = UDim2.new(0.8, 0, 0, 28)
+		btn.Position = UDim2.new(0.1, 0, 0.72, 0)
+		btn.TextSize = 11
+	end
 	btn.Parent = frame
 
 	local btnCorner = Instance.new("UICorner")
@@ -3542,9 +3615,15 @@ local Remotes = RS:WaitForChild("Remotes")
 
 warn("[PM-DEBUG] Client Script Loaded!")
 
--- Handle bounce from Lobby pads
+-- Import PlayerModule to get mobile/console control vectors
+local player = Players.LocalPlayer
+local playerScripts = player:WaitForChild("PlayerScripts")
+local PlayerModule = require(playerScripts:WaitForChild("PlayerModule"))
+local controlModule = PlayerModule:GetControls()
+
+-- Floating Class Assignment Card at the top of the screen
 local function showClassPopup(className)
-	local playerGui = Players.LocalPlayer:WaitForChild("PlayerGui")
+	local playerGui = player:WaitForChild("PlayerGui")
 	local sg = playerGui:FindFirstChild("ClassPopup")
 	if sg then sg:Destroy() end
 	
@@ -3552,33 +3631,101 @@ local function showClassPopup(className)
 	sg.Name = "ClassPopup"
 	sg.IgnoreGuiInset = true
 	
-	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(1, 0, 1, 0)
-	frame.BackgroundTransparency = 1
-	frame.Parent = sg
-	
 	local classData = GameConfig.CLASSES[className]
-	local title = Instance.new("TextLabel")
-	title.Size = UDim2.new(1, 0, 0, 100)
-	title.Position = UDim2.new(0, 0, 0.4, 0)
-	title.BackgroundTransparency = 1
-	title.Font = Enum.Font.Nunito
-	title.Text = "YOU ARE: " .. string.upper(className)
-	title.TextColor3 = classData.Color
-	title.TextScaled = true
-	title.TextTransparency = 1
-	title.TextStrokeTransparency = 1
-	title.TextStrokeColor3 = Color3.new(0, 0, 0)
-	title.Parent = frame
+	
+	-- Main floating card frame
+	local cardFrame = Instance.new("Frame")
+	cardFrame.Name = "CardFrame"
+	cardFrame.AnchorPoint = Vector2.new(0.5, 0)
+	cardFrame.Position = UDim2.new(0.5, 0, 0, -100) -- Start offscreen for slide animation
+	cardFrame.Size = UDim2.new(0, 360, 0, 95)
+	cardFrame.BackgroundColor3 = GameConfig.Palette.DarkTeal
+	cardFrame.BackgroundTransparency = 0.15
+	cardFrame.BorderSizePixel = 0
+	cardFrame.Parent = sg
+	
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, 16)
+	corner.Parent = cardFrame
+	
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = classData.Color
+	stroke.Thickness = 2
+	stroke.Transparency = 0.2
+	stroke.Parent = cardFrame
+	
+	-- Left side: Icon Container (Circle)
+	local iconContainer = Instance.new("Frame")
+	iconContainer.Name = "IconContainer"
+	iconContainer.Size = UDim2.new(0, 56, 0, 56)
+	iconContainer.Position = UDim2.new(0, 16, 0.5, 0)
+	iconContainer.AnchorPoint = Vector2.new(0, 0.5)
+	iconContainer.BackgroundColor3 = classData.Color
+	iconContainer.BackgroundTransparency = 0.85
+	iconContainer.BorderSizePixel = 0
+	iconContainer.Parent = cardFrame
+	
+	local iconCorner = Instance.new("UICorner")
+	iconCorner.CornerRadius = UDim.new(1, 0) -- Circle
+	iconCorner.Parent = iconContainer
+	
+	local iconLabel = Instance.new("TextLabel")
+	iconLabel.Size = UDim2.new(1, 0, 1, 0)
+	iconLabel.BackgroundTransparency = 1
+	iconLabel.Text = classData.Icon
+	iconLabel.TextSize = 28
+	iconLabel.Font = Enum.Font.Nunito
+	iconLabel.Parent = iconContainer
+	
+	-- Right side: Text Container
+	local textFrame = Instance.new("Frame")
+	textFrame.Size = UDim2.new(1, -96, 1, -20)
+	textFrame.Position = UDim2.new(0, 84, 0, 10)
+	textFrame.BackgroundTransparency = 1
+	textFrame.Parent = cardFrame
+	
+	local roleTitle = Instance.new("TextLabel")
+	roleTitle.Size = UDim2.new(1, 0, 0, 22)
+	roleTitle.BackgroundTransparency = 1
+	roleTitle.Text = string.upper(classData.DisplayName)
+	roleTitle.TextColor3 = classData.Color
+	roleTitle.TextSize = 16
+	roleTitle.Font = Enum.Font.GothamBold
+	roleTitle.TextXAlignment = Enum.TextXAlignment.Left
+	roleTitle.Parent = textFrame
+	
+	local roleDesc = Instance.new("TextLabel")
+	roleDesc.Size = UDim2.new(1, 0, 1, -24)
+	roleDesc.Position = UDim2.new(0, 0, 0, 24)
+	roleDesc.BackgroundTransparency = 1
+	roleDesc.Text = classData.Description
+	roleDesc.TextColor3 = GameConfig.Palette.Cream
+	roleDesc.TextSize = 11
+	roleDesc.Font = Enum.Font.Nunito
+	roleDesc.TextWrapped = true
+	roleDesc.TextXAlignment = Enum.TextXAlignment.Left
+	roleDesc.TextYAlignment = Enum.TextYAlignment.Top
+	roleDesc.Parent = textFrame
+	
 	sg.Parent = playerGui
 	
+	-- Slide down and slide up animations
 	task.spawn(function()
-		local ts = game:GetService("TweenService")
-		ts:Create(title, TweenInfo.new(0.5, Enum.EasingStyle.Back), {TextTransparency = 0, TextStrokeTransparency = 0, Position = UDim2.new(0, 0, 0.35, 0)}):Play()
-		task.wait(3)
-		local fade = ts:Create(title, TweenInfo.new(0.5), {TextTransparency = 1, TextStrokeTransparency = 1, Position = UDim2.new(0, 0, 0.3, 0)})
-		fade:Play()
-		fade.Completed:Wait()
+		local TweenService = game:GetService("TweenService")
+		-- Slide down
+		TweenService:Create(cardFrame, TweenInfo.new(0.5, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+			Position = UDim2.new(0.5, 0, 0, 25)
+		}):Play()
+		
+		task.wait(4.5)
+		
+		-- Slide back up
+		local slideUp = TweenService:Create(cardFrame, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			Position = UDim2.new(0.5, 0, 0, -110)
+		})
+		slideUp:Play()
+		slideUp.Completed:Wait()
+		
 		if sg and sg.Parent then sg:Destroy() end
 	end)
 end
@@ -3608,7 +3755,6 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
 	end
 end)
 
-local player = Players.LocalPlayer
 local camera = Workspace.CurrentCamera
 
 local PLANET_CENTER = GameConfig.PLANET_CENTER
@@ -3616,6 +3762,142 @@ local GRAVITY_STRENGTH = GameConfig.GRAVITY_STRENGTH
 local ROLL_SPEED = GameConfig.ROLL_SPEED
 
 local renderConn
+local mobileControlsGui = nil
+
+-- Clean up mobile buttons and restore default Roblox controls
+local function removeMobileControls()
+	if mobileControlsGui then
+		mobileControlsGui:Destroy()
+		mobileControlsGui = nil
+	end
+	
+	-- Restore default Roblox mobile jump button when exiting match
+	local playerGui = player:FindFirstChild("PlayerGui")
+	if playerGui then
+		local touchGui = playerGui:FindFirstChild("TouchGui")
+		if touchGui then
+			local touchFrame = touchGui:FindFirstChild("TouchFrame")
+			if touchFrame then
+				local jumpButton = touchFrame:FindFirstChild("JumpButton")
+				if jumpButton then
+					jumpButton.Visible = true
+				end
+			end
+		end
+	end
+end
+
+-- Create Mobile Screen Buttons for Jump and Boost
+local function createMobileControls(onJumpPressed, onBoostPressed)
+	removeMobileControls()
+	
+	local playerGui = player:WaitForChild("PlayerGui")
+	mobileControlsGui = Instance.new("ScreenGui")
+	mobileControlsGui.Name = "SphereMobileControls"
+	mobileControlsGui.ResetOnSpawn = false
+	mobileControlsGui.Parent = playerGui
+	
+	-- Hide default Roblox mobile jump button (we draw our own in the same spot that works with PlatformStand)
+	task.spawn(function()
+		local touchGui = playerGui:WaitForChild("TouchGui", 5)
+		if touchGui then
+			local touchFrame = touchGui:WaitForChild("TouchFrame", 5)
+			if touchFrame then
+				local jumpButton = touchFrame:WaitForChild("JumpButton", 5)
+				if jumpButton then
+					jumpButton.Visible = false
+				end
+			end
+		end
+	end)
+	
+	-- Custom Touch Jump Button (positioned in default jump button area)
+	local jumpBtn = Instance.new("TextButton")
+	jumpBtn.Name = "JumpButton"
+	jumpBtn.Size = UDim2.new(0, 70, 0, 70)
+	jumpBtn.Position = UDim2.new(1, -90, 1, -90) -- Default Roblox jump button spot
+	jumpBtn.AnchorPoint = Vector2.new(1, 1)
+	jumpBtn.BackgroundColor3 = GameConfig.Palette.DarkTeal
+	jumpBtn.BackgroundTransparency = 0.2
+	jumpBtn.Text = "⬆"
+	jumpBtn.TextColor3 = Color3.new(1, 1, 1)
+	jumpBtn.TextSize = 28
+	jumpBtn.Font = Enum.Font.GothamBold
+	jumpBtn.Parent = mobileControlsGui
+	
+	local jumpCorner = Instance.new("UICorner")
+	jumpCorner.CornerRadius = UDim.new(1, 0)
+	jumpCorner.Parent = jumpBtn
+	
+	local jumpStroke = Instance.new("UIStroke")
+	jumpStroke.Color = GameConfig.Palette.PaleTeal
+	jumpStroke.Thickness = 2
+	jumpStroke.Parent = jumpBtn
+	
+	-- Custom Touch Boost Button (positioned left of Jump button)
+	local boostBtn = Instance.new("TextButton")
+	boostBtn.Name = "BoostButton"
+	boostBtn.Size = UDim2.new(0, 60, 0, 60)
+	boostBtn.Position = UDim2.new(1, -175, 1, -95) -- Spaced to the left of Jump button
+	boostBtn.AnchorPoint = Vector2.new(1, 1)
+	boostBtn.BackgroundColor3 = GameConfig.Palette.DarkTeal
+	boostBtn.BackgroundTransparency = 0.2
+	boostBtn.Text = "⚡"
+	boostBtn.TextColor3 = GameConfig.Palette.SoftBlue
+	boostBtn.TextSize = 24
+	boostBtn.Font = Enum.Font.GothamBold
+	boostBtn.Parent = mobileControlsGui
+	
+	local boostCorner = Instance.new("UICorner")
+	boostCorner.CornerRadius = UDim.new(1, 0) -- Circle
+	boostCorner.Parent = boostBtn
+	
+	local boostStroke = Instance.new("UIStroke")
+	boostStroke.Color = GameConfig.Palette.SoftBlue
+	boostStroke.Thickness = 2
+	boostStroke.Parent = boostBtn
+	
+	-- Wire up touch events
+	jumpBtn.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			onJumpPressed()
+			jumpBtn.BackgroundTransparency = 0.4
+		end
+	end)
+	jumpBtn.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			jumpBtn.BackgroundTransparency = 0.2
+		end
+	end)
+	
+	boostBtn.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			onBoostPressed()
+			boostBtn.BackgroundTransparency = 0.4
+		end
+	end)
+	boostBtn.InputEnded:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+			boostBtn.BackgroundTransparency = 0.2
+		end
+	end)
+	
+	-- Update boost button appearance based on recharge state
+	local RunService = game:GetService("RunService")
+	task.spawn(function()
+		while mobileControlsGui and mobileControlsGui.Parent do
+			local cd = player:GetAttribute("BoostCooldown") or 0
+			if tick() < cd then
+				boostBtn.TextColor3 = Color3.fromRGB(130, 130, 130)
+				boostStroke.Color = Color3.fromRGB(100, 100, 100)
+			else
+				boostBtn.TextColor3 = GameConfig.Palette.SoftBlue
+				boostStroke.Color = GameConfig.Palette.SoftBlue
+			end
+			RunService.Heartbeat:Wait()
+		end
+	end)
+end
 
 local function onCharacterAdded(character)
 	warn("[PM-DEBUG] CharacterAdded fired for: " .. tostring(character.Name))
@@ -3625,6 +3907,7 @@ local function onCharacterAdded(character)
 		renderConn:Disconnect()
 		renderConn = nil
 	end
+	removeMobileControls()
 
 	local rootPart = character:WaitForChild("HumanoidRootPart", 10)
 	if not rootPart then
@@ -3648,10 +3931,28 @@ local function onCharacterAdded(character)
 	local gravityForce = rootPart:WaitForChild("PlanetGravity", 5)
 	if not gravityForce then 
 		warn("[PM-DEBUG] PlanetGravity not found, this character is not a sphere")
-		-- Don't reset ClassSelected here — on match servers the sphere swap hasn't happened yet
+		-- Make sure Lobby BillboardGuis are visible in the lobby
+		local lobby = Workspace:FindFirstChild("Lobby")
+		if lobby then
+			for _, desc in ipairs(lobby:GetDescendants()) do
+				if desc:IsA("BillboardGui") then
+					desc.Enabled = true
+				end
+			end
+		end
 		return 
 	end
-	
+
+	-- Hide all Lobby BillboardGuis (Solo/Duo/Trio mode cards) when in game mode
+	local lobby = Workspace:FindFirstChild("Lobby")
+	if lobby then
+		for _, desc in ipairs(lobby:GetDescendants()) do
+			if desc:IsA("BillboardGui") then
+				desc.Enabled = false
+			end
+		end
+	end
+
 	local rollTorque = rootPart:WaitForChild("RollTorque", 5)
 	if not rollTorque then 
 		warn("[PM-DEBUG] RollTorque not found!")
@@ -3670,33 +3971,106 @@ local function onCharacterAdded(character)
 	local currentForward = Vector3.new(0, 0, -1)
 
 	-- Input tracking
-	local mouseDelta = Vector2.new(0, 0)
 	local jumpInput = false
-	local keysDown = {}
+	local activeConns = {}
 	
-	UIS.InputBegan:Connect(function(input, processed)
-		if UIS:GetFocusedTextBox() then return end
-		keysDown[input.KeyCode] = true
-		if input.KeyCode == Enum.KeyCode.Space then
-			jumpInput = true
+	local function cleanupConns()
+		for _, conn in ipairs(activeConns) do
+			if conn then conn:Disconnect() end
 		end
-	end)
-	UIS.InputEnded:Connect(function(input, processed)
-		keysDown[input.KeyCode] = nil
+		activeConns = {}
+	end
+	cleanupConns()
+	
+	-- Boost triggering logic
+	local function triggerBoost()
+		local className = character:GetAttribute("Class")
+		if not className then return end
+		
+		local cooldown = player:GetAttribute("BoostCooldown") or 0
+		if tick() < cooldown or player:GetAttribute("BoostActive") then return end
+		
+		-- Activate boost
+		player:SetAttribute("BoostActive", true)
+		
+		-- Play boost sound
+		local boostSound = Instance.new("Sound")
+		boostSound.SoundId = "rbxassetid://9073172089" -- reusable energy hum
+		boostSound.Pitch = 1.6
+		boostSound.Volume = 0.8
+		boostSound.Parent = rootPart
+		boostSound:Play()
+		game:GetService("Debris"):AddItem(boostSound, 2)
+		
+		task.delay(1.5, function()
+			player:SetAttribute("BoostActive", false)
+			player:SetAttribute("BoostCooldown", tick() + 6.0)
+		end)
+	end
+
+	-- Jump triggering logic
+	local function triggerJump()
+		if not character:GetAttribute("Class") then return end
+		jumpInput = true
+	end
+	
+	table.insert(activeConns, UIS.InputBegan:Connect(function(input, processed)
+		if UIS:GetFocusedTextBox() then return end
+		if input.KeyCode == Enum.KeyCode.Space then
+			triggerJump()
+		elseif input.KeyCode == Enum.KeyCode.LeftShift then
+			triggerBoost()
+		end
+	end))
+	
+	table.insert(activeConns, UIS.InputEnded:Connect(function(input, processed)
 		if input.KeyCode == Enum.KeyCode.Space then
 			jumpInput = false
 		end
+	end))
+	
+	table.insert(activeConns, UIS.JumpRequest:Connect(function()
+		triggerJump()
+	end))
+
+	-- Check for initial class attribute to resolve race conditions
+	local initialClass = character:GetAttribute("Class")
+	if initialClass and not _G.ClassSelected then
+		warn("[PM-DEBUG] Race condition prevented! Manually selecting class on load: " .. tostring(initialClass))
+		Remotes.SelectClass:FireServer(initialClass)
+		_G.ClassSelected = true
+		showClassPopup(initialClass)
+	end
+
+	character:GetAttributeChangedSignal("Class"):Connect(function()
+		local newClass = character:GetAttribute("Class")
+		if newClass and not _G.ClassSelected then
+			warn("[PM-DEBUG] Class attribute changed! Selecting class: " .. tostring(newClass))
+			Remotes.SelectClass:FireServer(newClass)
+			_G.ClassSelected = true
+			showClassPopup(newClass)
+		end
 	end)
+
+	-- Create mobile controls if on touch device
+	if UIS.TouchEnabled then
+		createMobileControls(triggerJump, triggerBoost)
+	end
 
 	local lastPaintTime = 0
 	local controlActive = false
+	local lastPaintPos = nil
 
 	local function activateControls()
 		warn("[PM-DEBUG] Activating controls, controlActive was: " .. tostring(controlActive))
 		if controlActive then return end
 		controlActive = true
 		camera.CameraType = Enum.CameraType.Scriptable
-		UIS.MouseBehavior = Enum.MouseBehavior.LockCenter
+		
+		-- Only lock mouse if not on mobile/touch screen
+		if not UIS.TouchEnabled then
+			UIS.MouseBehavior = Enum.MouseBehavior.LockCenter
+		end
 	end
 
 	-- Main physics + camera loop
@@ -3718,7 +4092,23 @@ local function onCharacterAdded(character)
 
 		if not controlActive then return end
 
-		local delta = UIS:GetMouseDelta()
+		-- Keep mouse locked in center to hide the cursor on PC on every frame!
+		if not UIS.TouchEnabled then
+			UIS.MouseBehavior = Enum.MouseBehavior.LockCenter
+		end
+
+		-- Camera direction updates:
+		-- Touch drag camera control for mobile, MouseDelta for PC
+		local delta = Vector2.new(0, 0)
+		if UIS.TouchEnabled then
+			-- On mobile, touch dragging updates camera angle
+			-- We can read touch input from user drag movements
+			local touchDelta = UIS:GetMouseDelta()
+			delta = touchDelta * 0.4
+		else
+			delta = UIS:GetMouseDelta()
+		end
+		
 		local yawCF = CFrame.fromAxisAngle(up, -delta.X * cameraSensitivity)
 		currentForward = yawCF:VectorToWorldSpace(currentForward)
 		currentForward = (currentForward - up * currentForward:Dot(up))
@@ -3738,11 +4128,15 @@ local function onCharacterAdded(character)
 			camera.FieldOfView = camera.FieldOfView + (70 - camera.FieldOfView) * (dt * 10)
 		end
 
+		-- Read movement vectors from standard Roblox controller (works on WASD + mobile thumbstick)
+		local moveVector = controlModule:GetMoveVector()
 		local inputVec = Vector3.new(0, 0, 0)
-		if keysDown[Enum.KeyCode.W] then inputVec = inputVec + rotatedForward end
-		if keysDown[Enum.KeyCode.S] then inputVec = inputVec - rotatedForward end
-		if keysDown[Enum.KeyCode.D] then inputVec = inputVec + rotatedRight end
-		if keysDown[Enum.KeyCode.A] then inputVec = inputVec - rotatedRight end
+		
+		-- moveVector.Z is forward (-1) / backward (+1)
+		-- moveVector.X is right (+1) / left (-1)
+		if moveVector.Magnitude > 0.01 then
+			inputVec = (rotatedForward * -moveVector.Z) + (rotatedRight * moveVector.X)
+		end
 
 		if inputVec.Magnitude > 0.01 then
 			inputVec = inputVec.Unit
@@ -3786,12 +4180,16 @@ local function onCharacterAdded(character)
 	humanoid.StateChanged:Connect(function(_, newState)
 		humanoid.PlatformStand = true
 	end)
+
+	-- Clean up all input connections when the character is destroyed/respawned
+	table.insert(activeConns, character.Destroying:Connect(cleanupConns))
 end
 
 if player.Character then
 	onCharacterAdded(player.Character)
 end
 player.CharacterAdded:Connect(onCharacterAdded)
+player.CharacterRemoving:Connect(removeMobileControls)
 ]]></string>
         </Properties>
       </Item>
