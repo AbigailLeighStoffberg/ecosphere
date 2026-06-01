@@ -35,7 +35,7 @@ local classShowcases = {
 		ClassName = "Economist",
 		TargetPosition = Vector3.new(1512.803, -180, 611.545), -- -15 degrees
 		Title = "💰 THE ECONOMIST",
-		Description = "Lays down a glowing network for clean, zero-waste trade. Maps out fair-trade routes and ethical supply chains.",
+		Description = "A soul of commerce reborn. Weaves golden trade-lattices across barren ground, restoring fair-trade routes and zero-waste supply chains through sheer economic willpower.",
 		Color = GameConfig.CLASSES.Economist.Color,
 		Icon = GameConfig.CLASSES.Economist.Icon,
 	},
@@ -43,7 +43,7 @@ local classShowcases = {
 		ClassName = "Cultivator",
 		TargetPosition = Vector3.new(1515.806, -180, 634.355), -- 0 degrees
 		Title = "🌱 THE CULTIVATOR",
-		Description = "Acts as a high-speed seeder. Injects bio-gels to rapidly grow forests, restore the soil, and protect the environment.",
+		Description = "An ancient gardener's spirit, reawakened. Injects bio-gels that surge through dead soil, rapidly seeding forests and breathing life back into the planet's crust.",
 		Color = GameConfig.CLASSES.Cultivator.Color,
 		Icon = GameConfig.CLASSES.Cultivator.Icon,
 	},
@@ -51,7 +51,7 @@ local classShowcases = {
 		ClassName = "Advocate",
 		TargetPosition = Vector3.new(1512.803, -180, 657.165), -- 15 degrees
 		Title = "💜 THE ADVOCATE",
-		Description = "Uses smart-dust to create safe zones. Maps out cultural spaces and ensures resources are shared equally for a fair community.",
+		Description = "A guardian soul from the old world. Deploys smart-dust shields to create safe zones, mapping cultural sanctuaries where resources flow equally to all.",
 		Color = GameConfig.CLASSES.Advocate.Color,
 		Icon = GameConfig.CLASSES.Advocate.Icon,
 	}
@@ -228,7 +228,7 @@ for _, data in ipairs(classShowcases) do
 	shell.Name = "HoloShell"
 	shell.Shape = Enum.PartType.Ball
 	shell.Size = Vector3.new(2.2, 2.2, 2.2)
-	shell.Material = Enum.Material.Glass
+	shell.Material = Enum.Material.SmoothPlastic
 	shell.Color = data.Color
 	shell.Transparency = 0.6
 	shell.Anchored = true
@@ -236,106 +236,44 @@ for _, data in ipairs(classShowcases) do
 	shell.CFrame = CFrame.new(pedCFrame.Position + pedCFrame.UpVector * 5.0) -- Floats slightly higher above the larger pad
 	shell.Parent = pedModel
 
-	-- Create Class-Specific spinning core geometry
+	-- Ethereal bright colors for the souls so they look like pure energy
+	local soulColors = {
+		Economist = Color3.fromHex("#FFEFA6"), -- Ethereal bright gold
+		Cultivator = Color3.fromHex("#D1FAD7"), -- Ethereal mint green
+		Advocate = Color3.fromHex("#FFD4DC"), -- Ethereal pastel pink
+	}
+	local soulColor = soulColors[data.ClassName] or data.Color
+
+	-- Soul core: 4 glowing neon spheres for a complex, highly organic lava lamp morphing effect
 	local coreGeom = {}
+	coreGeom.Blobs = {}
 
-	if data.ClassName == "Economist" then
-		-- Golden spinning diamond
-		local diamond = Instance.new("Part")
-		diamond.Name = "Diamond"
-		diamond.Size = Vector3.new(1.6, 1.6, 1.6)
-		diamond.Color = data.Color
-		diamond.Material = Enum.Material.Neon
-		diamond.CanCollide = false
-		diamond.Anchored = true
-		
-		local mesh = Instance.new("SpecialMesh")
-		mesh.MeshType = Enum.MeshType.FileMesh
-		mesh.MeshId = "rbxassetid://97564601"
-		mesh.Scale = Vector3.new(1.2, 1.2, 1.2)
-		mesh.Parent = diamond
-		diamond.Parent = pedModel
-		
-		coreGeom.BasePart = diamond
+	local blobConfigs = {
+		{ Name = "SoulSphere1", BaseSize = 0.85, ScaleAmp = 0.25, BobSpeed = 1.4, BobAmp = 0.20, Phase = 0.0 },
+		{ Name = "SoulSphere2", BaseSize = 0.60, ScaleAmp = 0.18, BobSpeed = 2.0, BobAmp = 0.35, Phase = 1.8 },
+		{ Name = "SoulSphere3", BaseSize = 0.45, ScaleAmp = 0.14, BobSpeed = 2.6, BobAmp = 0.40, Phase = 3.5 },
+		{ Name = "SoulSphere4", BaseSize = 0.30, ScaleAmp = 0.10, BobSpeed = 3.2, BobAmp = 0.45, Phase = 5.0 }
+	}
 
-	elseif data.ClassName == "Cultivator" then
-		-- Green glowing flower core
-		local flowerPart = Instance.new("Part")
-		flowerPart.Name = "FlowerPart"
-		flowerPart.Size = Vector3.new(1.4, 1.4, 1.4)
-		flowerPart.Color = data.Color
-		flowerPart.Material = Enum.Material.Neon
-		flowerPart.CanCollide = false
-		flowerPart.Anchored = true
-		
-		local mesh = Instance.new("SpecialMesh")
-		mesh.MeshType = Enum.MeshType.FileMesh
-		mesh.MeshId = "rbxassetid://5547039023"
-		mesh.Scale = Vector3.new(0.45, 0.45, 0.45)
-		mesh.Parent = flowerPart
-		flowerPart.Parent = pedModel
-		
-		coreGeom.BasePart = flowerPart
+	for _, config in ipairs(blobConfigs) do
+		local blob = Instance.new("Part")
+		blob.Name = config.Name
+		blob.Shape = Enum.PartType.Ball
+		blob.Size = Vector3.new(config.BaseSize, config.BaseSize, config.BaseSize)
+		blob.Color = soulColor
+		blob.Material = Enum.Material.Neon
+		blob.CanCollide = false
+		blob.Anchored = true
+		blob.Parent = pedModel
 
-	elseif data.ClassName == "Advocate" then
-		-- Magenta core sphere + intersecting rings
-		local sphere = Instance.new("Part")
-		sphere.Name = "Sphere"
-		sphere.Shape = Enum.PartType.Ball
-		sphere.Size = Vector3.new(0.8, 0.8, 0.8)
-		sphere.Color = data.Color
-		sphere.Material = Enum.Material.Neon
-		sphere.CanCollide = false
-		sphere.Anchored = true
-		sphere.Parent = pedModel
-
-		local ring1 = Instance.new("Part")
-		ring1.Name = "Ring1"
-		ring1.Shape = Enum.PartType.Cylinder
-		ring1.Size = Vector3.new(0.15, 1.4, 1.4)
-		ring1.Color = data.Color
-		ring1.Material = Enum.Material.Neon
-		ring1.CanCollide = false
-		ring1.Anchored = true
-		ring1.Parent = pedModel
-
-		local ring2 = Instance.new("Part")
-		ring2.Name = "Ring2"
-		ring2.Shape = Enum.PartType.Cylinder
-		ring2.Size = Vector3.new(0.15, 1.4, 1.4)
-		ring2.Color = data.Color
-		ring2.Material = Enum.Material.Neon
-		ring2.CanCollide = false
-		ring2.Anchored = true
-		ring2.Parent = pedModel
-
-		coreGeom.BasePart = sphere
-		coreGeom.Ring1 = ring1
-		coreGeom.Ring2 = ring2
-	end
-
-	-- Attach wisp soul particles to the core base part
-	if coreGeom.BasePart then
-		local soulPart = Instance.new("ParticleEmitter")
-		soulPart.Name = "SoulParticles"
-		soulPart.Texture = "rbxassetid://243665306" -- Ethereal wisp texture
-		soulPart.Color = ColorSequence.new(data.Color)
-		soulPart.Size = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 0.8),
-			NumberSequenceKeypoint.new(1, 0.2)
+		table.insert(coreGeom.Blobs, {
+			Part = blob,
+			BaseSize = config.BaseSize,
+			ScaleAmp = config.ScaleAmp,
+			BobSpeed = config.BobSpeed,
+			BobAmp = config.BobAmp,
+			Phase = config.Phase
 		})
-		soulPart.Transparency = NumberSequence.new({
-			NumberSequenceKeypoint.new(0, 0.5),
-			NumberSequenceKeypoint.new(0.5, 0.2),
-			NumberSequenceKeypoint.new(1, 1)
-		})
-		soulPart.Lifetime = NumberRange.new(0.8, 1.2)
-		soulPart.Rate = 12
-		soulPart.Speed = NumberRange.new(0.4, 1.0)
-		soulPart.VelocitySpread = 45
-		soulPart.Acceleration = Vector3.new(0, 1.5, 0) -- Float upwards gently
-		soulPart.LockedToPart = false
-		soulPart.Parent = coreGeom.BasePart
 	end
 
 	-- BillboardGui Card (Must be parented to PlayerGui for buttons to be interactive!)
@@ -440,7 +378,6 @@ for _, data in ipairs(classShowcases) do
 		Color = data.Color,
 		IsNear = false,
 		HologramScale = 1.0,
-		RotationAngle = math.random() * 100,
 	})
 end
 
@@ -469,11 +406,7 @@ end)
 
 -- Render and Proximity Loop
 local activeTweens = {}
-local spinSpeed = {
-	Economist = 3.6,
-	Cultivator = 1.0,
-	Advocate = 2.0,
-}
+
 
 RunService.Heartbeat:Connect(function(dt)
 	local char = player.Character
@@ -484,34 +417,31 @@ RunService.Heartbeat:Connect(function(dt)
 	local detectionRadius = 16
 
 	local timeVal = tick()
-	local bobOffset = math.sin(timeVal * 2.5) * 0.25
+
 
 	for _, ped in ipairs(trackedPedestals) do
-		-- 1. Spin and bob the core geometries inside the hologram bubble
-		ped.RotationAngle = ped.RotationAngle + dt * spinSpeed[ped.ClassName]
-		local angle = ped.RotationAngle
+		-- 1. Bob and morph the lava lamp blobs inside the hologram bubble
 		local shell = ped.Shell
 		
-		-- Target CFrame with bobbing offset
-		local baseCF = shell.CFrame * CFrame.new(0, bobOffset, 0)
-		
-		if ped.ClassName == "Economist" then
-			if ped.CoreGeom.BasePart and ped.CoreGeom.BasePart.Parent then
-				ped.CoreGeom.BasePart.CFrame = baseCF * CFrame.Angles(angle * 0.4, angle, 0)
-			end
-		elseif ped.ClassName == "Cultivator" then
-			if ped.CoreGeom.BasePart and ped.CoreGeom.BasePart.Parent then
-				ped.CoreGeom.BasePart.CFrame = baseCF * CFrame.Angles(0, angle * 1.2, 0)
-			end
-		elseif ped.ClassName == "Advocate" then
-			if ped.CoreGeom.BasePart and ped.CoreGeom.BasePart.Parent then
-				ped.CoreGeom.BasePart.CFrame = baseCF
-			end
-			if ped.CoreGeom.Ring1 and ped.CoreGeom.Ring1.Parent then
-				ped.CoreGeom.Ring1.CFrame = baseCF * CFrame.Angles(angle, angle * 0.5, 0)
-			end
-			if ped.CoreGeom.Ring2 and ped.CoreGeom.Ring2.Parent then
-				ped.CoreGeom.Ring2.CFrame = baseCF * CFrame.Angles(-angle, -angle * 0.5, 0)
+		-- Unique offsets per class to prevent sync
+		local classOffset = (ped.ClassName == "Economist" and 0 or ped.ClassName == "Cultivator" and 2 or 4)
+
+		-- Bob and morph each of the 4 lava lamp blobs
+		if ped.CoreGeom.Blobs then
+			for _, blobInfo in ipairs(ped.CoreGeom.Blobs) do
+				local part = blobInfo.Part
+				if part and part.Parent then
+					-- Position bobbing
+					local t = timeVal * blobInfo.BobSpeed + blobInfo.Phase + classOffset
+					local bob = math.sin(t) * blobInfo.BobAmp
+					part.CFrame = shell.CFrame * CFrame.new(0, bob, 0)
+
+					-- Highly morphic scale squishing and stretching along X, Y, and Z axes
+					local sx = blobInfo.BaseSize + math.sin(t * 1.6) * blobInfo.ScaleAmp
+					local sy = blobInfo.BaseSize + math.cos(t * 1.3) * blobInfo.ScaleAmp
+					local sz = blobInfo.BaseSize + math.sin(t * 2.1) * blobInfo.ScaleAmp
+					part.Size = Vector3.new(sx, sy, sz)
+				end
 			end
 		end
 
