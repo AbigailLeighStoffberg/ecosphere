@@ -2,128 +2,143 @@
 -- Creates an opaque cover immediately so the player never sees raw game world.
 -- This is the standard professional pattern for Roblox loading screens.
 
+local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
 local RS = game:GetService("ReplicatedStorage")
 local ContentProvider = game:GetService("ContentProvider")
 
 local player = Players.LocalPlayer
+
+-- Wait for PlayerGui. The default Roblox loading screen covers this delay!
 local playerGui = player:WaitForChild("PlayerGui")
 
 -- Detect server type IMMEDIATELY
 local IS_MATCH_SERVER = (game.PrivateServerId ~= "" and game.PrivateServerOwnerId == 0)
 
 -- ============================================================
--- STEP 1: Create opaque cover INSTANTLY (before any rendering)
+-- STEP 1: Get custom loading screen (from teleport or create fallback)
 -- ============================================================
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "LoadingScreenGui"
-screenGui.IgnoreGuiInset = true
-screenGui.ResetOnSpawn = false
-screenGui.DisplayOrder = 9999
-screenGui.Parent = playerGui
+local arrivingGui = TeleportService:GetArrivingTeleportGui()
+local screenGui
+local bg
 
-local bg = Instance.new("Frame")
-bg.Name = "Background"
-bg.Size = UDim2.new(1, 0, 1, 0)
-bg.BackgroundColor3 = Color3.fromHex("#081211")
-bg.BorderSizePixel = 0
-bg.Parent = screenGui
+if arrivingGui then
+	screenGui = arrivingGui
+	screenGui.Parent = playerGui
+	bg = screenGui:FindFirstChild("Background")
+else
+	-- Create fallback opaque cover INSTANTLY
+	screenGui = Instance.new("ScreenGui")
+	screenGui.Name = "LoadingScreenGui"
+	screenGui.IgnoreGuiInset = true
+	screenGui.ResetOnSpawn = false
+	screenGui.DisplayOrder = 9999
+	screenGui.Parent = playerGui
 
-local gradient = Instance.new("UIGradient")
-gradient.Color = ColorSequence.new({
-	ColorSequenceKeypoint.new(0, Color3.fromHex("#040b0a")),
-	ColorSequenceKeypoint.new(0.5, Color3.fromHex("#0b1c1a")),
-	ColorSequenceKeypoint.new(1, Color3.fromHex("#020706"))
-})
-gradient.Rotation = 45
-gradient.Parent = bg
+	bg = Instance.new("Frame")
+	bg.Name = "Background"
+	bg.Size = UDim2.new(1, 0, 1, 0)
+	bg.BackgroundColor3 = Color3.fromHex("#081211")
+	bg.BorderSizePixel = 0
+	bg.Parent = screenGui
 
--- Simple title while modules load
-local title = Instance.new("TextLabel")
-title.Name = "GameTitle"
-title.AnchorPoint = Vector2.new(0.5, 0.5)
-title.Position = UDim2.new(0.5, 0, 0.45, 0)
-title.Size = UDim2.new(0, 400, 0, 40)
-title.BackgroundTransparency = 1
-title.Text = "E C O S P H E R E"
-title.TextColor3 = Color3.fromRGB(255, 255, 255)
-title.TextSize = 28
-title.Font = Enum.Font.Montserrat
-title.Parent = bg
+	local gradient = Instance.new("UIGradient")
+	gradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromHex("#040b0a")),
+		ColorSequenceKeypoint.new(0.5, Color3.fromHex("#0b1c1a")),
+		ColorSequenceKeypoint.new(1, Color3.fromHex("#020706"))
+	})
+	gradient.Rotation = 45
+	gradient.Parent = bg
 
--- Subtle pulsing dots
-local dotsFrame = Instance.new("Frame")
-dotsFrame.Name = "DotsFrame"
-dotsFrame.AnchorPoint = Vector2.new(0.5, 0)
-dotsFrame.Position = UDim2.new(0.5, 0, 0.55, 0)
-dotsFrame.Size = UDim2.new(0, 80, 0, 20)
-dotsFrame.BackgroundTransparency = 1
-dotsFrame.Parent = bg
+	-- Simple title while modules load
+	local title = Instance.new("TextLabel")
+	title.Name = "GameTitle"
+	title.AnchorPoint = Vector2.new(0.5, 0.5)
+	title.Position = UDim2.new(0.5, 0, 0.45, 0)
+	title.Size = UDim2.new(0, 400, 0, 40)
+	title.BackgroundTransparency = 1
+	title.Text = "E C O S P H E R E"
+	title.TextColor3 = Color3.fromRGB(255, 255, 255)
+	title.TextSize = 28
+	title.Font = Enum.Font.Montserrat
+	title.Parent = bg
 
-local dotsLayout = Instance.new("UIListLayout")
-dotsLayout.FillDirection = Enum.FillDirection.Horizontal
-dotsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-dotsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
-dotsLayout.Padding = UDim.new(0, 8)
-dotsLayout.Parent = dotsFrame
+	-- Subtle pulsing dots
+	local dotsFrame = Instance.new("Frame")
+	dotsFrame.Name = "DotsFrame"
+	dotsFrame.AnchorPoint = Vector2.new(0.5, 0)
+	dotsFrame.Position = UDim2.new(0.5, 0, 0.55, 0)
+	dotsFrame.Size = UDim2.new(0, 80, 0, 20)
+	dotsFrame.BackgroundTransparency = 1
+	dotsFrame.Parent = bg
 
-local paleTeal = Color3.fromHex("#7EE3D0")
-local limeGreen = Color3.fromHex("#A3FF78")
+	local dotsLayout = Instance.new("UIListLayout")
+	dotsLayout.FillDirection = Enum.FillDirection.Horizontal
+	dotsLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+	dotsLayout.VerticalAlignment = Enum.VerticalAlignment.Center
+	dotsLayout.Padding = UDim.new(0, 8)
+	dotsLayout.Parent = dotsFrame
 
-local dots = {}
-for i = 1, 3 do
-	local dot = Instance.new("Frame")
-	dot.Name = "Dot_" .. i
-	dot.Size = UDim2.new(0, 10, 0, 10)
-	dot.BackgroundColor3 = paleTeal
-	dot.BorderSizePixel = 0
-	dot.Parent = dotsFrame
+	local paleTeal = Color3.fromHex("#7EE3D0")
+	local limeGreen = Color3.fromHex("#A3FF78")
 
-	local dotCorner = Instance.new("UICorner")
-	dotCorner.CornerRadius = UDim.new(1, 0)
-	dotCorner.Parent = dot
+	local dots = {}
+	for i = 1, 3 do
+		local dot = Instance.new("Frame")
+		dot.Name = "Dot_" .. i
+		dot.Size = UDim2.new(0, 10, 0, 10)
+		dot.BackgroundColor3 = paleTeal
+		dot.BorderSizePixel = 0
+		dot.Parent = dotsFrame
 
-	table.insert(dots, dot)
+		local dotCorner = Instance.new("UICorner")
+		dotCorner.CornerRadius = UDim.new(1, 0)
+		dotCorner.Parent = dot
+
+		table.insert(dots, dot)
+	end
+
+	-- Animate dots
+	task.spawn(function()
+		local dotIndex = 1
+		while screenGui.Parent do
+			for idx, dot in ipairs(dots) do
+				if idx == dotIndex then
+					TweenService:Create(dot, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+						Size = UDim2.new(0, 12, 0, 12),
+						BackgroundColor3 = limeGreen,
+						BackgroundTransparency = 0
+					}):Play()
+				else
+					TweenService:Create(dot, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+						Size = UDim2.new(0, 8, 0, 8),
+						BackgroundColor3 = paleTeal,
+						BackgroundTransparency = 0.4
+					}):Play()
+				end
+			end
+			dotIndex = dotIndex % 3 + 1
+			task.wait(0.3)
+		end
+	end)
+
+	-- Title glow
+	task.spawn(function()
+		while screenGui.Parent do
+			TweenService:Create(title, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, true), {
+				TextTransparency = 0.25
+			}):Play()
+			task.wait(2)
+		end
+	end)
 end
 
--- Animate dots
-task.spawn(function()
-	local dotIndex = 1
-	while screenGui.Parent do
-		for idx, dot in ipairs(dots) do
-			if idx == dotIndex then
-				TweenService:Create(dot, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-					Size = UDim2.new(0, 12, 0, 12),
-					BackgroundColor3 = limeGreen,
-					BackgroundTransparency = 0
-				}):Play()
-			else
-				TweenService:Create(dot, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-					Size = UDim2.new(0, 8, 0, 8),
-					BackgroundColor3 = paleTeal,
-					BackgroundTransparency = 0.4
-				}):Play()
-			end
-		end
-		dotIndex = dotIndex % 3 + 1
-		task.wait(0.3)
-	end
-end)
-
--- Title glow
-task.spawn(function()
-	while screenGui.Parent do
-		TweenService:Create(title, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, true), {
-			TextTransparency = 0.25
-		}):Play()
-		task.wait(2)
-	end
-end)
-
 -- ============================================================
--- STEP 2: Remove the default Roblox loading screen
+-- STEP 2: Remove the default Roblox loading screen ONLY AFTER OURS IS PARENTED
 -- ============================================================
+-- This guarantees zero frames of the raw game world are visible!
 game:GetService("ReplicatedFirst"):RemoveDefaultLoadingScreen()
 
 -- ============================================================

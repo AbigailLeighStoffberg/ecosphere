@@ -157,7 +157,18 @@ local function teleportTeam(padData)
 		teleportData.classAssignments[tostring(player.UserId)] = className
 	end
 
-	-- Notify players they are about to teleport (shows custom loading screen)
+	-- Play teleport effects FIRST so the player sees them
+	for player, className in pairs(classAssignments) do
+		local char = player.Character
+		if char and char.PrimaryPart then
+			playTeleportEffect(char:GetPivot().Position, GameConfig.CLASSES[className].Color)
+		end
+	end
+
+	-- Wait for the beam animation to mostly finish (0.45s)
+	task.wait(0.45)
+
+	-- Notify players they are about to teleport (shows custom loading screen instantly)
 	for _, player in ipairs(playersToTeleport) do
 		pcall(function()
 			Remotes.QueueUpdate:FireClient(player, "teleporting", {
@@ -167,19 +178,8 @@ local function teleportTeam(padData)
 		end)
 	end
 
-	-- Wait for the client to process the event and create the loading screen GUI
-	-- BEFORE creating VFX parts (which replicate immediately and would be visible)
-	task.wait(0.15)
-
-	-- Play teleport effects (now hidden behind the loading screen)
-	for player, className in pairs(classAssignments) do
-		local char = player.Character
-		if char and char.PrimaryPart then
-			playTeleportEffect(char:GetPivot().Position, GameConfig.CLASSES[className].Color)
-		end
-	end
-
-	task.wait(0.35) -- Brief wait for SetTeleportGui registration
+	-- Wait 0.1s to guarantee the client's screen is covered before freezing the server with TeleportToPrivateServer
+	task.wait(0.1)
 
 	-- Check MATCH_PLACE_ID is set
 	if GameConfig.MATCH_PLACE_ID == 0 then

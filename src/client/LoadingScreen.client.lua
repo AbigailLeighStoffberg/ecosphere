@@ -200,6 +200,8 @@ local function createLoadingGUI(matchMode, assignedClass)
 
 	-- Animate dots
 	task.spawn(function()
+		-- Wait until parented (important for the SetTeleportGui copy)
+		while not gui.Parent do task.wait(0.1) end
 		local dotIndex = 1
 		while gui.Parent do
 			for idx, dot in ipairs(dots) do
@@ -224,6 +226,7 @@ local function createLoadingGUI(matchMode, assignedClass)
 
 	-- Title glow
 	task.spawn(function()
+		while not gui.Parent do task.wait(0.1) end
 		while gui.Parent do
 			TweenService:Create(title, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, true), {
 				TextTransparency = 0.25
@@ -240,17 +243,16 @@ end
 -- ============================================================
 Remotes.QueueUpdate.OnClientEvent:Connect(function(eventType, data)
 	if eventType == "teleporting" and data then
-		local gui = createLoadingGUI(data.matchMode, data.assignedClass)
+		-- Create TWO guis: one for immediate display, one for the transition
+		local immediateGui = createLoadingGUI(data.matchMode, data.assignedClass)
+		local transitionGui = createLoadingGUI(data.matchMode, data.assignedClass)
 
-		-- Parent INSTANTLY — no fade-in. The screen must cover
-		-- the viewport before the teleport VFX plays.
-		gui.Parent = playerGui
+		-- Parent INSTANTLY — no fade-in. This covers the screen.
+		immediateGui.Parent = playerGui
 
-		-- Register as the teleport GUI so it persists across place loading.
-		-- This is a bonus — the ReplicatedFirst script on the destination
-		-- server creates its own cover regardless of whether this persists.
+		-- Pass the second one to SetTeleportGui so it doesn't steal the immediate one
 		pcall(function()
-			TeleportService:SetTeleportGui(gui)
+			TeleportService:SetTeleportGui(transitionGui)
 		end)
 	end
 end)
@@ -264,19 +266,26 @@ Remotes:WaitForChild("ReturnToLobby").OnClientEvent:Connect(function(delay)
 	-- Show 1.5 seconds before the actual teleport fires
 	task.wait(math.max(0, delay - 1.5))
 
-	local gui = createLoadingGUI("RETURNING TO LOBBY...", nil)
-	local bg = gui:FindFirstChild("Background")
-	local card = bg and bg:FindFirstChild("LoadingCard")
-	local subtitle = card and card:FindFirstChild("Subtitle")
-	if subtitle then
-		subtitle.Text = "SYNCHRONIZING WITH LOBBY..."
-		subtitle.TextColor3 = GameConfig.Palette.SoftGold
+	local immediateGui = createLoadingGUI("RETURNING TO LOBBY...", nil)
+	local transitionGui = createLoadingGUI("RETURNING TO LOBBY...", nil)
+
+	local function setupSubtitle(gui)
+		local bg = gui:FindFirstChild("Background")
+		local card = bg and bg:FindFirstChild("LoadingCard")
+		local subtitle = card and card:FindFirstChild("Subtitle")
+		if subtitle then
+			subtitle.Text = "SYNCHRONIZING WITH LOBBY..."
+			subtitle.TextColor3 = GameConfig.Palette.SoftGold
+		end
 	end
 
-	gui.Parent = playerGui
+	setupSubtitle(immediateGui)
+	setupSubtitle(transitionGui)
+
+	immediateGui.Parent = playerGui
 
 	pcall(function()
-		TeleportService:SetTeleportGui(gui)
+		TeleportService:SetTeleportGui(transitionGui)
 	end)
 end)
 
