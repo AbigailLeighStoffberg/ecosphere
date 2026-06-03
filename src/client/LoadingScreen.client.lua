@@ -337,7 +337,19 @@ if existingGui then
 			subtitle.Text = "BIOME READY!"
 			subtitle.TextColor3 = GameConfig.Palette.LimeGreen
 		end
-		task.wait(0.6)
+		
+		-- Wait until the character is fully loaded as a sphere and camera is bound to prevent screen flashing
+		local camera = workspace.CurrentCamera
+		local startTime = tick()
+		while tick() - startTime < 5 do -- 5 seconds maximum timeout
+			local char = player.Character
+			if char and char:FindFirstChild("PlanetGravity", true) and camera.CameraType == Enum.CameraType.Scriptable then
+				break
+			end
+			task.wait(0.1)
+		end
+		
+		task.wait(0.3) -- Brief visual buffer for smooth transition
 	else
 		if subtitle then
 			subtitle.Text = "ARRIVED IN LOBBY!"
