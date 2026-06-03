@@ -175,7 +175,7 @@ local function teleportTeam(padData)
 		end
 	end
 
-	task.wait(0.3) -- Brief delay for effect to play
+	task.wait(0.8) -- Allow client loading screen to register via SetTeleportGui
 
 	-- Check MATCH_PLACE_ID is set
 	if GameConfig.MATCH_PLACE_ID == 0 then
