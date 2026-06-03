@@ -2112,20 +2112,6 @@ local RunService = game:GetService("RunService")
 local GameConfig = require(RS:WaitForChild("GameConfig"))
 local Remotes = RS:WaitForChild("Remotes")
 
--- Skip on lobby servers/places
-local isLobby = false
-if workspace:FindFirstChild("Lobby") then
-	isLobby = true
-elseif not workspace:FindFirstChild("PlanetBase") then
-	-- Fallback check in case of replication delay
-	isLobby = (workspace:WaitForChild("Lobby", 1.5) ~= nil)
-end
-
-if isLobby then
-	print("[EcoSphere] GameHUD: Skipped initialization in the lobby")
-	return
-end
-
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
@@ -2425,7 +2411,15 @@ local function createSwitchBtn(className, hotkey)
 		label.Size = UDim2.new(1, 0, 0, 12)
 		label.Position = UDim2.new(0, 0, 1, 2)
 		label.BackgroundTransparency = 1
-		label.Text = "[" .. hotkey .. "]"
+		
+		local gpKeys = { ["1"] = "←", ["2"] = "↑", ["3"] = "→" }
+		local gpKey = gpKeys[hotkey]
+		if gpKey then
+			label.Text = "[" .. hotkey .. "] / [" .. gpKey .. "]"
+		else
+			label.Text = "[" .. hotkey .. "]"
+		end
+		
 		label.TextColor3 = GameConfig.Palette.Cream
 		label.TextSize = 9
 		label.Font = Enum.Font.Nunito
@@ -2558,32 +2552,37 @@ end)
 
 local function enableHUD()
 	screenGui.Enabled = true
-	progressFrame.Visible = true
-	switchFrame.Visible = true
-	timerFrame.Visible = true
-	boostBg.Visible = true
+end
+
+local function disableHUD()
+	screenGui.Enabled = false
 end
 
 Remotes:WaitForChild("StartGameClient").OnClientEvent:Connect(enableHUD)
 
--- Resolve potential race condition by checking if the class attribute is already present on load
-local function checkInitialHUDState()
-	local function connectCharacter(char)
-		local function check()
-			if char:GetAttribute("Class") then
-				enableHUD()
-			end
+local function monitorCharacter(char)
+	local function check()
+		if char:GetAttribute("Class") then
+			enableHUD()
+		else
+			disableHUD()
 		end
-		check()
-		char:GetAttributeChangedSignal("Class"):Connect(check)
 	end
-
-	if player.Character then
-		connectCharacter(player.Character)
-	end
-	player.CharacterAdded:Connect(connectCharacter)
+	
+	local conn = char:GetAttributeChangedSignal("Class"):Connect(check)
+	check()
+	
+	local destroyConn
+	destroyConn = char.Destroying:Connect(function()
+		conn:Disconnect()
+		destroyConn:Disconnect()
+	end)
 end
-task.spawn(checkInitialHUDState)
+
+player.CharacterAdded:Connect(monitorCharacter)
+if player.Character then
+	task.spawn(monitorCharacter, player.Character)
+end
 
 print("[EcoSphere] GameHUD initialized")
 
@@ -2615,13 +2614,23 @@ local fillCorner = Instance.new("UICorner")
 fillCorner.CornerRadius = UDim.new(1, 0)
 fillCorner.Parent = boostFill
 
+local function getBoostPrompt()
+	if UIS.TouchEnabled then
+		return "BOOST READY"
+	elseif UIS.GamepadEnabled or UIS:GetGamepadConnected(Enum.UserInputType.Gamepad1) then
+		return "L2 TO BOOST"
+	else
+		return "SHIFT TO BOOST"
+	end
+end
+
 local boostText = Instance.new("TextLabel")
 boostText.Name = "BoostText"
 boostText.AnchorPoint = Vector2.new(0.5, 1)
 boostText.Position = UDim2.new(0.5, 0, 0, -4)
 boostText.Size = UDim2.new(1, 0, 0, 18)
 boostText.BackgroundTransparency = 1
-boostText.Text = UIS.TouchEnabled and "BOOST" or "SHIFT TO BOOST"
+boostText.Text = getBoostPrompt()
 boostText.TextColor3 = Color3.new(1,1,1)
 boostText.Font = Enum.Font.Nunito
 boostText.TextSize = 12 -- Increased for legibility
@@ -2633,7 +2642,6 @@ boostTextStroke.Thickness = 2
 boostTextStroke.Parent = boostText
 
 RunService.RenderStepped:Connect(function()
-	if not screenGui.Enabled or not boostBg.Visible then return end
 	local player = Players.LocalPlayer
 	local cd = player and player:GetAttribute("BoostCooldown") or 0
 	local now = tick()
@@ -2646,7 +2654,7 @@ RunService.RenderStepped:Connect(function()
 	else
 		boostFill.Size = UDim2.new(1, 0, 1, 0)
 		boostFill.BackgroundColor3 = GameConfig.Palette.SoftBlue
-		boostText.Text = UIS.TouchEnabled and "BOOST READY" or "SHIFT TO BOOST"
+		boostText.Text = getBoostPrompt()
 	end
 end)
 
@@ -2669,13 +2677,6 @@ returnLabel.Parent = stateOverlay
 
 Remotes:WaitForChild("ReturnToLobby").OnClientEvent:Connect(function(delay)
 	if not delay then delay = 10 end
-	
-	-- Hide all match HUD elements immediately during return countdown
-	progressFrame.Visible = false
-	switchFrame.Visible = false
-	timerFrame.Visible = false
-	boostBg.Visible = false
-	
 	returnLabel.Visible = true
 
 	task.spawn(function()
@@ -2939,11 +2940,32 @@ task.spawn(function()
 	end
 end)
 
--- Handle StartGameClient — hide lobby HUD when entering match
-Remotes:WaitForChild("StartGameClient").OnClientEvent:Connect(function()
-	isInLobby = false
-	screenGui.Enabled = false
-end)
+-- Handle dynamic Lobby HUD visibility based on character class attribute presence
+local function monitorCharacter(char)
+	local function check()
+		if char:GetAttribute("Class") then
+			isInLobby = false
+			screenGui.Enabled = false
+		else
+			isInLobby = true
+			screenGui.Enabled = true
+		end
+	end
+	
+	local conn = char:GetAttributeChangedSignal("Class"):Connect(check)
+	check()
+	
+	local destroyConn
+	destroyConn = char.Destroying:Connect(function()
+		conn:Disconnect()
+		destroyConn:Disconnect()
+	end)
+end
+
+player.CharacterAdded:Connect(monitorCharacter)
+if player.Character then
+	task.spawn(monitorCharacter, player.Character)
+end
 
 print("[EcoSphere] LobbyHUD initialized")
 ]]></string>
@@ -3741,11 +3763,11 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed or not _G.ClassSelected then return end
 	
 	local newClass = nil
-	if input.KeyCode == Enum.KeyCode.One then
+	if input.KeyCode == Enum.KeyCode.One or input.KeyCode == Enum.KeyCode.DPadLeft then
 		newClass = "Economist"
-	elseif input.KeyCode == Enum.KeyCode.Two then
+	elseif input.KeyCode == Enum.KeyCode.Two or input.KeyCode == Enum.KeyCode.DPadUp then
 		newClass = "Cultivator"
-	elseif input.KeyCode == Enum.KeyCode.Three then
+	elseif input.KeyCode == Enum.KeyCode.Three or input.KeyCode == Enum.KeyCode.DPadRight then
 		newClass = "Advocate"
 	end
 	
@@ -4016,15 +4038,19 @@ local function onCharacterAdded(character)
 	
 	table.insert(activeConns, UIS.InputBegan:Connect(function(input, processed)
 		if UIS:GetFocusedTextBox() then return end
-		if input.KeyCode == Enum.KeyCode.Space then
+		if input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.ButtonA then
 			triggerJump()
-		elseif input.KeyCode == Enum.KeyCode.LeftShift then
+		elseif input.KeyCode == Enum.KeyCode.LeftShift or 
+		       input.KeyCode == Enum.KeyCode.ButtonL2 or 
+		       input.KeyCode == Enum.KeyCode.ButtonR2 or 
+		       input.KeyCode == Enum.KeyCode.ButtonL1 or 
+		       input.KeyCode == Enum.KeyCode.ButtonR1 then
 			triggerBoost()
 		end
 	end))
 	
 	table.insert(activeConns, UIS.InputEnded:Connect(function(input, processed)
-		if input.KeyCode == Enum.KeyCode.Space then
+		if input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.ButtonA then
 			jumpInput = false
 		end
 	end))
@@ -4107,6 +4133,19 @@ local function onCharacterAdded(character)
 			delta = touchDelta * 0.4
 		else
 			delta = UIS:GetMouseDelta()
+		end
+
+		-- Read Gamepad Thumbstick2 for PlayStation/console right-stick camera steering
+		local gamepadState = UIS:GetGamepadState(Enum.UserInputType.Gamepad1)
+		for _, input in ipairs(gamepadState) do
+			if input.KeyCode == Enum.KeyCode.Thumbstick2 then
+				local stickVal = input.Position
+				if math.abs(stickVal.X) > 0.15 then
+					-- Gamepad thumbstick is a velocity (rate of change), so scale it by dt and a rotation speed
+					local gamepadSensitivity = 120 * dt
+					delta = delta + Vector2.new(stickVal.X * gamepadSensitivity, 0)
+				end
+			end
 		end
 		
 		local yawCF = CFrame.fromAxisAngle(up, -delta.X * cameraSensitivity)

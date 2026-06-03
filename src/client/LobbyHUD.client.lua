@@ -242,10 +242,31 @@ task.spawn(function()
 	end
 end)
 
--- Handle StartGameClient — hide lobby HUD when entering match
-Remotes:WaitForChild("StartGameClient").OnClientEvent:Connect(function()
-	isInLobby = false
-	screenGui.Enabled = false
-end)
+-- Handle dynamic Lobby HUD visibility based on character class attribute presence
+local function monitorCharacter(char)
+	local function check()
+		if char:GetAttribute("Class") then
+			isInLobby = false
+			screenGui.Enabled = false
+		else
+			isInLobby = true
+			screenGui.Enabled = true
+		end
+	end
+	
+	local conn = char:GetAttributeChangedSignal("Class"):Connect(check)
+	check()
+	
+	local destroyConn
+	destroyConn = char.Destroying:Connect(function()
+		conn:Disconnect()
+		destroyConn:Disconnect()
+	end)
+end
+
+player.CharacterAdded:Connect(monitorCharacter)
+if player.Character then
+	task.spawn(monitorCharacter, player.Character)
+end
 
 print("[EcoSphere] LobbyHUD initialized")

@@ -135,11 +135,11 @@ UIS.InputBegan:Connect(function(input, gameProcessed)
 	if gameProcessed or not _G.ClassSelected then return end
 	
 	local newClass = nil
-	if input.KeyCode == Enum.KeyCode.One then
+	if input.KeyCode == Enum.KeyCode.One or input.KeyCode == Enum.KeyCode.DPadLeft then
 		newClass = "Economist"
-	elseif input.KeyCode == Enum.KeyCode.Two then
+	elseif input.KeyCode == Enum.KeyCode.Two or input.KeyCode == Enum.KeyCode.DPadUp then
 		newClass = "Cultivator"
-	elseif input.KeyCode == Enum.KeyCode.Three then
+	elseif input.KeyCode == Enum.KeyCode.Three or input.KeyCode == Enum.KeyCode.DPadRight then
 		newClass = "Advocate"
 	end
 	
@@ -410,15 +410,19 @@ local function onCharacterAdded(character)
 	
 	table.insert(activeConns, UIS.InputBegan:Connect(function(input, processed)
 		if UIS:GetFocusedTextBox() then return end
-		if input.KeyCode == Enum.KeyCode.Space then
+		if input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.ButtonA then
 			triggerJump()
-		elseif input.KeyCode == Enum.KeyCode.LeftShift then
+		elseif input.KeyCode == Enum.KeyCode.LeftShift or 
+		       input.KeyCode == Enum.KeyCode.ButtonL2 or 
+		       input.KeyCode == Enum.KeyCode.ButtonR2 or 
+		       input.KeyCode == Enum.KeyCode.ButtonL1 or 
+		       input.KeyCode == Enum.KeyCode.ButtonR1 then
 			triggerBoost()
 		end
 	end))
 	
 	table.insert(activeConns, UIS.InputEnded:Connect(function(input, processed)
-		if input.KeyCode == Enum.KeyCode.Space then
+		if input.KeyCode == Enum.KeyCode.Space or input.KeyCode == Enum.KeyCode.ButtonA then
 			jumpInput = false
 		end
 	end))
@@ -501,6 +505,19 @@ local function onCharacterAdded(character)
 			delta = touchDelta * 0.4
 		else
 			delta = UIS:GetMouseDelta()
+		end
+
+		-- Read Gamepad Thumbstick2 for PlayStation/console right-stick camera steering
+		local gamepadState = UIS:GetGamepadState(Enum.UserInputType.Gamepad1)
+		for _, input in ipairs(gamepadState) do
+			if input.KeyCode == Enum.KeyCode.Thumbstick2 then
+				local stickVal = input.Position
+				if math.abs(stickVal.X) > 0.15 then
+					-- Gamepad thumbstick is a velocity (rate of change), so scale it by dt and a rotation speed
+					local gamepadSensitivity = 120 * dt
+					delta = delta + Vector2.new(stickVal.X * gamepadSensitivity, 0)
+				end
+			end
 		end
 		
 		local yawCF = CFrame.fromAxisAngle(up, -delta.X * cameraSensitivity)

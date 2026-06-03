@@ -2,6 +2,7 @@
 local Players = game:GetService("Players")
 local RS = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 local GameConfig = require(RS:WaitForChild("GameConfig"))
 local Remotes = RS:WaitForChild("Remotes")
 
@@ -16,7 +17,7 @@ screenGui.Name = "GameHUD"
 screenGui.ResetOnSpawn = false
 screenGui.IgnoreGuiInset = true
 screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-screenGui.Enabled = true -- Always display the HUD!
+screenGui.Enabled = false -- Hide HUD in the lobby initially
 screenGui.Parent = playerGui
 
 -- ========================
@@ -304,7 +305,15 @@ local function createSwitchBtn(className, hotkey)
 		label.Size = UDim2.new(1, 0, 0, 12)
 		label.Position = UDim2.new(0, 0, 1, 2)
 		label.BackgroundTransparency = 1
-		label.Text = "[" .. hotkey .. "]"
+		
+		local gpKeys = { ["1"] = "←", ["2"] = "↑", ["3"] = "→" }
+		local gpKey = gpKeys[hotkey]
+		if gpKey then
+			label.Text = "[" .. hotkey .. "] / [" .. gpKey .. "]"
+		else
+			label.Text = "[" .. hotkey .. "]"
+		end
+		
 		label.TextColor3 = GameConfig.Palette.Cream
 		label.TextSize = 9
 		label.Font = Enum.Font.Nunito
@@ -439,20 +448,35 @@ local function enableHUD()
 	screenGui.Enabled = true
 end
 
+local function disableHUD()
+	screenGui.Enabled = false
+end
+
 Remotes:WaitForChild("StartGameClient").OnClientEvent:Connect(enableHUD)
 
--- Resolve potential race condition by checking if the class attribute is already present on load
-local function checkInitialHUDState()
-	local char = player.Character or player.CharacterAdded:Wait()
+local function monitorCharacter(char)
 	local function check()
 		if char:GetAttribute("Class") then
 			enableHUD()
+		else
+			disableHUD()
 		end
 	end
+	
+	local conn = char:GetAttributeChangedSignal("Class"):Connect(check)
 	check()
-	char:GetAttributeChangedSignal("Class"):Connect(check)
+	
+	local destroyConn
+	destroyConn = char.Destroying:Connect(function()
+		conn:Disconnect()
+		destroyConn:Disconnect()
+	end)
 end
-task.spawn(checkInitialHUDState)
+
+player.CharacterAdded:Connect(monitorCharacter)
+if player.Character then
+	task.spawn(monitorCharacter, player.Character)
+end
 
 print("[EcoSphere] GameHUD initialized")
 
@@ -484,13 +508,23 @@ local fillCorner = Instance.new("UICorner")
 fillCorner.CornerRadius = UDim.new(1, 0)
 fillCorner.Parent = boostFill
 
+local function getBoostPrompt()
+	if UIS.TouchEnabled then
+		return "BOOST READY"
+	elseif UIS.GamepadEnabled or UIS:GetGamepadConnected(Enum.UserInputType.Gamepad1) then
+		return "L2 TO BOOST"
+	else
+		return "SHIFT TO BOOST"
+	end
+end
+
 local boostText = Instance.new("TextLabel")
 boostText.Name = "BoostText"
 boostText.AnchorPoint = Vector2.new(0.5, 1)
 boostText.Position = UDim2.new(0.5, 0, 0, -4)
 boostText.Size = UDim2.new(1, 0, 0, 18)
 boostText.BackgroundTransparency = 1
-boostText.Text = UIS.TouchEnabled and "BOOST" or "SHIFT TO BOOST"
+boostText.Text = getBoostPrompt()
 boostText.TextColor3 = Color3.new(1,1,1)
 boostText.Font = Enum.Font.Nunito
 boostText.TextSize = 12 -- Increased for legibility
@@ -514,7 +548,7 @@ RunService.RenderStepped:Connect(function()
 	else
 		boostFill.Size = UDim2.new(1, 0, 1, 0)
 		boostFill.BackgroundColor3 = GameConfig.Palette.SoftBlue
-		boostText.Text = UIS.TouchEnabled and "BOOST READY" or "SHIFT TO BOOST"
+		boostText.Text = getBoostPrompt()
 	end
 end)
 
