@@ -144,16 +144,30 @@ Players.PlayerAdded:Connect(function(player)
 		warn("[EcoSphere] MatchBootstrap: No teleport data for", player.DisplayName, "— assigned random class:", assignedClass)
 	end
 
-	-- Wait for character to load, then swap to sphere
-	player.CharacterAdded:Once(function(character)
+	-- Listen for character loads (Connect instead of Once to support death/respawn in match)
+	player.CharacterAdded:Connect(function(character)
+		-- Avoid infinite loop: check if character is already a sphere
+		if character:FindFirstChild("PlanetGravity", true) or character:FindFirstChild("VisualShell", true) then
+			return
+		end
+
 		task.wait(0.5) -- Let the character fully load
-		spawnAsSphere(player, assignedClass)
+		
+		-- Ensure character is still active and alive
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if humanoid and humanoid.Health > 0 then
+			spawnAsSphere(player, assignedClass)
+		end
 	end)
 
-	-- If character already exists (unlikely but safe)
+	-- If character already exists, verify health and status
 	if player.Character then
-		task.wait(0.5)
-		spawnAsSphere(player, assignedClass)
+		local humanoid = player.Character:FindFirstChildOfClass("Humanoid")
+		if humanoid and humanoid.Health > 0 then
+			if not player.Character:FindFirstChild("PlanetGravity", true) then
+				spawnAsSphere(player, assignedClass)
+			end
+		end
 	end
 end)
 

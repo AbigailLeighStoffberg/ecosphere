@@ -157,6 +157,16 @@ local function teleportTeam(padData)
 		teleportData.classAssignments[tostring(player.UserId)] = className
 	end
 
+	-- Notify players they are about to teleport (shows custom loading screen)
+	for _, player in ipairs(playersToTeleport) do
+		pcall(function()
+			Remotes.QueueUpdate:FireClient(player, "teleporting", {
+				matchMode = teleportData.matchMode,
+				assignedClass = classAssignments[player]
+			})
+		end)
+	end
+
 	-- Play teleport effects
 	for player, className in pairs(classAssignments) do
 		local char = player.Character
