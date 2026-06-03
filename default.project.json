@@ -51,6 +51,11 @@
       }
     },
 
+    "ReplicatedFirst": {
+      "$ignoreUnknownInstances": true,
+      "$path": "src/replicatedfirst"
+    },
+
     "Workspace": {
       "$ignoreUnknownInstances": true,
       "$properties": {

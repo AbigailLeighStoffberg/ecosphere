@@ -1,42 +1,38 @@
--- LoadingScreen: Professional loading screen for matchmaking transitions
--- Architecture: On match servers, this script creates a loading screen IMMEDIATELY
--- at startup (before any rendering), guaranteeing no lobby flash regardless of
--- whether SetTeleportGui persisted the GUI from the previous place.
+-- LoadingScreen (StarterPlayerScripts): DEPARTURE-ONLY logic.
+-- Arrival loading is handled by ReplicatedFirst/LoadingHandler.client.lua
+-- which runs before any rendering occurs.
+--
+-- This script handles:
+-- 1. Showing the loading screen when teleporting TO a match
+-- 2. Showing the loading screen when returning TO the lobby
 
 local Players = game:GetService("Players")
 local TeleportService = game:GetService("TeleportService")
 local TweenService = game:GetService("TweenService")
+local RS = game:GetService("ReplicatedStorage")
+
+local GameConfig = require(RS:WaitForChild("GameConfig"))
+local Remotes = RS:WaitForChild("Remotes")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Detect server type IMMEDIATELY (no WaitForChild calls yet)
-local IS_MATCH_SERVER = (game.PrivateServerId ~= "" and game.PrivateServerOwnerId == 0)
-
 -- ============================================================
--- STEP 1: If on a match server, create an opaque black screen INSTANTLY
--- This runs before any other client script can render the lobby.
+-- UI BUILDER: Creates the full glassmorphic loading card
 -- ============================================================
-local arrivalScreen = nil
+local function createLoadingGUI(matchMode, assignedClass)
+	local gui = Instance.new("ScreenGui")
+	gui.Name = "LoadingScreenGui"
+	gui.IgnoreGuiInset = true
+	gui.ResetOnSpawn = false
+	gui.DisplayOrder = 9999
 
-if IS_MATCH_SERVER then
-	-- Destroy any SetTeleportGui remnant to avoid duplicates
-	local existing = playerGui:FindFirstChild("LoadingScreenGui")
-	if existing then existing:Destroy() end
-
-	arrivalScreen = Instance.new("ScreenGui")
-	arrivalScreen.Name = "LoadingScreenGui"
-	arrivalScreen.IgnoreGuiInset = true
-	arrivalScreen.ResetOnSpawn = false
-	arrivalScreen.DisplayOrder = 9999
-	arrivalScreen.Parent = playerGui
-
-	local blackout = Instance.new("Frame")
-	blackout.Name = "Background"
-	blackout.Size = UDim2.new(1, 0, 1, 0)
-	blackout.BackgroundColor3 = Color3.fromHex("#081211")
-	blackout.BorderSizePixel = 0
-	blackout.Parent = arrivalScreen
+	local bg = Instance.new("Frame")
+	bg.Name = "Background"
+	bg.Size = UDim2.new(1, 0, 1, 0)
+	bg.BackgroundColor3 = Color3.fromHex("#081211")
+	bg.BorderSizePixel = 0
+	bg.Parent = gui
 
 	local gradient = Instance.new("UIGradient")
 	gradient.Color = ColorSequence.new({
@@ -45,33 +41,9 @@ if IS_MATCH_SERVER then
 		ColorSequenceKeypoint.new(1, Color3.fromHex("#020706"))
 	})
 	gradient.Rotation = 45
-	gradient.Parent = blackout
+	gradient.Parent = bg
 
-	-- Simple "loading..." text while we wait for GameConfig
-	local tempLabel = Instance.new("TextLabel")
-	tempLabel.Name = "TempLabel"
-	tempLabel.AnchorPoint = Vector2.new(0.5, 0.5)
-	tempLabel.Position = UDim2.new(0.5, 0, 0.5, 0)
-	tempLabel.Size = UDim2.new(0, 400, 0, 40)
-	tempLabel.BackgroundTransparency = 1
-	tempLabel.Text = "E C O S P H E R E"
-	tempLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-	tempLabel.TextSize = 28
-	tempLabel.Font = Enum.Font.Montserrat
-	tempLabel.Parent = blackout
-end
-
--- ============================================================
--- Now safe to do WaitForChild calls (loading screen already covers the view)
--- ============================================================
-local RS = game:GetService("ReplicatedStorage")
-local GameConfig = require(RS:WaitForChild("GameConfig"))
-local Remotes = RS:WaitForChild("Remotes")
-
--- ============================================================
--- UI BUILDER: Creates the full glassmorphic loading card
--- ============================================================
-local function buildCard(parent, matchMode, assignedClass)
+	-- Central Card
 	local card = Instance.new("Frame")
 	card.Name = "LoadingCard"
 	card.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -80,7 +52,7 @@ local function buildCard(parent, matchMode, assignedClass)
 	card.BackgroundColor3 = GameConfig.Palette.DarkTeal
 	card.BackgroundTransparency = 0.25
 	card.BorderSizePixel = 0
-	card.Parent = parent
+	card.Parent = bg
 
 	local cardSizeConstraint = Instance.new("UISizeConstraint")
 	cardSizeConstraint.MaxWidth = 480
@@ -120,7 +92,7 @@ local function buildCard(parent, matchMode, assignedClass)
 	subtitle.Name = "Subtitle"
 	subtitle.Size = UDim2.new(1, 0, 0, 20)
 	subtitle.BackgroundTransparency = 1
-	subtitle.Text = "INITIALIZING BIOME..."
+	subtitle.Text = "TELEPORTING..."
 	subtitle.TextColor3 = GameConfig.Palette.LimeGreen
 	subtitle.TextSize = 12
 	subtitle.Font = Enum.Font.Montserrat
@@ -132,7 +104,7 @@ local function buildCard(parent, matchMode, assignedClass)
 	modeLabel.Name = "ModeLabel"
 	modeLabel.Size = UDim2.new(1, 0, 0, 20)
 	modeLabel.BackgroundTransparency = 1
-	modeLabel.Text = string.upper(matchMode or "ESTABLISHING CONNECTIVITY...")
+	modeLabel.Text = string.upper(matchMode or "ENTERING MATCH...")
 	modeLabel.TextColor3 = GameConfig.Palette.Cream
 	modeLabel.TextSize = 14
 	modeLabel.Font = Enum.Font.Nunito
@@ -229,7 +201,7 @@ local function buildCard(parent, matchMode, assignedClass)
 	-- Animate dots
 	task.spawn(function()
 		local dotIndex = 1
-		while card.Parent do
+		while gui.Parent do
 			for idx, dot in ipairs(dots) do
 				if idx == dotIndex then
 					TweenService:Create(dot, TweenInfo.new(0.3, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
@@ -250,9 +222,9 @@ local function buildCard(parent, matchMode, assignedClass)
 		end
 	end)
 
-	-- Gentle title glow
+	-- Title glow
 	task.spawn(function()
-		while card.Parent do
+		while gui.Parent do
 			TweenService:Create(title, TweenInfo.new(1, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, 0, true), {
 				TextTransparency = 0.25
 			}):Play()
@@ -260,200 +232,42 @@ local function buildCard(parent, matchMode, assignedClass)
 		end
 	end)
 
-	return card, subtitle
+	return gui
 end
 
 -- ============================================================
--- FADE OUT: Smoothly dismiss the loading screen
--- ============================================================
-local function fadeOut(gui)
-	if not gui or not gui.Parent then return end
-
-	local bg = gui:FindFirstChild("Background")
-	if not bg then gui:Destroy() return end
-
-	TweenService:Create(bg, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-		BackgroundTransparency = 1
-	}):Play()
-
-	for _, child in ipairs(bg:GetDescendants()) do
-		if child:IsA("Frame") then
-			TweenService:Create(child, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-				BackgroundTransparency = 1
-			}):Play()
-		elseif child:IsA("TextLabel") then
-			TweenService:Create(child, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-				TextTransparency = 1
-			}):Play()
-		elseif child:IsA("UIStroke") then
-			TweenService:Create(child, TweenInfo.new(0.5, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-				Transparency = 1
-			}):Play()
-		end
-	end
-	task.wait(0.65)
-	gui:Destroy()
-end
-
--- ============================================================
--- MATCH SERVER ARRIVAL: Upgrade the instant blackout into the full card,
--- then wait for the sphere character + camera before fading out.
--- ============================================================
-if IS_MATCH_SERVER and arrivalScreen then
-	local bg = arrivalScreen:FindFirstChild("Background")
-
-	-- Remove the temp label and replace with the full card
-	local tempLabel = bg and bg:FindFirstChild("TempLabel")
-	if tempLabel then tempLabel:Destroy() end
-
-	local card, subtitle = buildCard(bg, nil, nil)
-
-	-- Try to get teleport data for class info
-	task.spawn(function()
-		local joinData = player:GetJoinData()
-		if joinData and joinData.TeleportData then
-			local td = joinData.TeleportData
-			local modeLabel = card:FindFirstChild("ModeLabel")
-			if modeLabel and td.matchMode then
-				modeLabel.Text = string.upper(td.matchMode)
-			end
-			local assignedClass = td.classAssignments and td.classAssignments[tostring(player.UserId)]
-			if assignedClass and GameConfig.CLASSES[assignedClass] then
-				-- Rebuild card with class info
-				card:Destroy()
-				card, subtitle = buildCard(bg, td.matchMode, assignedClass)
-			end
-		end
-	end)
-
-	-- Wait for the sphere to be fully set up and the camera to be scriptable
-	task.spawn(function()
-		if subtitle then
-			subtitle.Text = "SPAWNING PLAYER..."
-			subtitle.TextColor3 = GameConfig.Palette.SoftGold
-		end
-
-		-- Wait for StartGameClient (server has finished setting up the sphere)
-		Remotes.StartGameClient.OnClientEvent:Wait()
-
-		if subtitle then
-			subtitle.Text = "BIOME READY!"
-			subtitle.TextColor3 = GameConfig.Palette.LimeGreen
-		end
-
-		-- Now poll until the camera is actually bound to the sphere
-		local camera = workspace.CurrentCamera
-		local timeout = tick() + 5
-		while tick() < timeout do
-			local char = player.Character
-			if char
-				and char:FindFirstChild("PlanetGravity", true)
-				and camera.CameraType == Enum.CameraType.Scriptable
-			then
-				break
-			end
-			task.wait(0.05)
-		end
-
-		task.wait(0.2) -- Tiny buffer for the first frame to render behind the screen
-		fadeOut(arrivalScreen)
-	end)
-end
-
--- ============================================================
--- LOBBY ARRIVAL: If we returned from a match, handle the persisted GUI
--- ============================================================
-if not IS_MATCH_SERVER then
-	local existing = playerGui:FindFirstChild("LoadingScreenGui")
-	if existing then
-		local bg = existing:FindFirstChild("Background")
-		local card = bg and bg:FindFirstChild("LoadingCard")
-		local subtitle = card and card:FindFirstChild("Subtitle")
-
-		if subtitle then
-			subtitle.Text = "ARRIVED IN LOBBY!"
-			subtitle.TextColor3 = GameConfig.Palette.LimeGreen
-		end
-
-		-- Wait for character to load in the lobby
-		if not player.Character then
-			player.CharacterAdded:Wait()
-		end
-		task.wait(1.0)
-		fadeOut(existing)
-	end
-end
-
--- ============================================================
--- DEPARTURE: Show loading screen INSTANTLY when teleporting
+-- DEPARTURE: Show loading screen INSTANTLY when teleporting to match
 -- ============================================================
 Remotes.QueueUpdate.OnClientEvent:Connect(function(eventType, data)
 	if eventType == "teleporting" and data then
-		-- Create the full GUI
-		local gui = Instance.new("ScreenGui")
-		gui.Name = "LoadingScreenGui"
-		gui.IgnoreGuiInset = true
-		gui.ResetOnSpawn = false
-		gui.DisplayOrder = 9999
+		local gui = createLoadingGUI(data.matchMode, data.assignedClass)
 
-		local bg = Instance.new("Frame")
-		bg.Name = "Background"
-		bg.Size = UDim2.new(1, 0, 1, 0)
-		bg.BackgroundColor3 = Color3.fromHex("#081211")
-		bg.BorderSizePixel = 0
-		bg.Parent = gui
-
-		local gradient = Instance.new("UIGradient")
-		gradient.Color = ColorSequence.new({
-			ColorSequenceKeypoint.new(0, Color3.fromHex("#040b0a")),
-			ColorSequenceKeypoint.new(0.5, Color3.fromHex("#0b1c1a")),
-			ColorSequenceKeypoint.new(1, Color3.fromHex("#020706"))
-		})
-		gradient.Rotation = 45
-		gradient.Parent = bg
-
-		buildCard(bg, data.matchMode, data.assignedClass)
-
-		-- Parent INSTANTLY — no fade-in delay
+		-- Parent INSTANTLY — no fade-in. The screen must cover
+		-- the viewport before the teleport VFX plays.
 		gui.Parent = playerGui
 
-		-- Register as the teleport GUI so it persists across place loading
+		-- Register as the teleport GUI so it persists across place loading.
+		-- This is a bonus — the ReplicatedFirst script on the destination
+		-- server creates its own cover regardless of whether this persists.
 		pcall(function()
 			TeleportService:SetTeleportGui(gui)
 		end)
 	end
 end)
 
--- Return to lobby departure
+-- ============================================================
+-- DEPARTURE: Show loading screen when returning to lobby
+-- ============================================================
 Remotes:WaitForChild("ReturnToLobby").OnClientEvent:Connect(function(delay)
 	if not delay then delay = 10 end
 
-	-- Show 1.5 seconds before the actual teleport
+	-- Show 1.5 seconds before the actual teleport fires
 	task.wait(math.max(0, delay - 1.5))
 
-	local gui = Instance.new("ScreenGui")
-	gui.Name = "LoadingScreenGui"
-	gui.IgnoreGuiInset = true
-	gui.ResetOnSpawn = false
-	gui.DisplayOrder = 9999
-
-	local bg = Instance.new("Frame")
-	bg.Name = "Background"
-	bg.Size = UDim2.new(1, 0, 1, 0)
-	bg.BackgroundColor3 = Color3.fromHex("#081211")
-	bg.BorderSizePixel = 0
-	bg.Parent = gui
-
-	local gradient = Instance.new("UIGradient")
-	gradient.Color = ColorSequence.new({
-		ColorSequenceKeypoint.new(0, Color3.fromHex("#040b0a")),
-		ColorSequenceKeypoint.new(0.5, Color3.fromHex("#0b1c1a")),
-		ColorSequenceKeypoint.new(1, Color3.fromHex("#020706"))
-	})
-	gradient.Rotation = 45
-	gradient.Parent = bg
-
-	local _, subtitle = buildCard(bg, "RETURNING TO LOBBY...", nil)
+	local gui = createLoadingGUI("RETURNING TO LOBBY...", nil)
+	local bg = gui:FindFirstChild("Background")
+	local card = bg and bg:FindFirstChild("LoadingCard")
+	local subtitle = card and card:FindFirstChild("Subtitle")
 	if subtitle then
 		subtitle.Text = "SYNCHRONIZING WITH LOBBY..."
 		subtitle.TextColor3 = GameConfig.Palette.SoftGold
@@ -466,4 +280,4 @@ Remotes:WaitForChild("ReturnToLobby").OnClientEvent:Connect(function(delay)
 	end)
 end)
 
-print("[EcoSphere] LoadingScreen initialized")
+print("[EcoSphere] LoadingScreen (departure) initialized")

@@ -167,7 +167,11 @@ local function teleportTeam(padData)
 		end)
 	end
 
-	-- Play teleport effects
+	-- Wait for the client to process the event and create the loading screen GUI
+	-- BEFORE creating VFX parts (which replicate immediately and would be visible)
+	task.wait(0.15)
+
+	-- Play teleport effects (now hidden behind the loading screen)
 	for player, className in pairs(classAssignments) do
 		local char = player.Character
 		if char and char.PrimaryPart then
@@ -175,7 +179,7 @@ local function teleportTeam(padData)
 		end
 	end
 
-	task.wait(0.8) -- Allow client loading screen to register via SetTeleportGui
+	task.wait(0.35) -- Brief wait for SetTeleportGui registration
 
 	-- Check MATCH_PLACE_ID is set
 	if GameConfig.MATCH_PLACE_ID == 0 then
